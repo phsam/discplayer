@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800" font-family="Helvetica,Arial,sans-serif">
+  <!-- Disc print guide, 800×800. Put it on a layer above your artwork and hide it before exporting. -->
+  <rect width="800" height="800" fill="none" stroke="#999" stroke-dasharray="6 6"/>
+  <!-- trimmed off: outside r=390 -->
+  <path d="M0 0H800V800H0Z M400 10a390 390 0 1 0 0.01 0Z" fill="#e5484d" fill-opacity=".18" fill-rule="evenodd"/>
+  <!-- rim highlight: r 385–397 -->
+  <circle cx="400" cy="400" r="385" fill="none" stroke="#f5a524" stroke-width="2" stroke-dasharray="8 6"/>
+  <!-- safe area for text and logos: r 150–375 -->
+  <circle cx="400" cy="400" r="375" fill="none" stroke="#30a46c" stroke-width="2"/>
+  <circle cx="400" cy="400" r="150" fill="none" stroke="#30a46c" stroke-width="2"/>
+  <!-- clear plastic hub, covered by the player: r < 146 -->
+  <circle cx="400" cy="400" r="146" fill="#8b8d98" fill-opacity=".35"/>
+  <!-- spindle hole: r < 111 -->
+  <circle cx="400" cy="400" r="111" fill="#e5484d" fill-opacity=".25"/>
+  <g font-size="14" text-anchor="middle">
+    <text x="400" y="30" fill="#e5484d">trimmed (outside r390)</text>
+    <text x="400" y="52" fill="#f5a524">rim highlight r385</text>
+    <text x="400" y="78" fill="#30a46c">SAFE AREA r150–r375</text>
+    <text x="400" y="290" fill="#555">hub (covered) r146</text>
+    <text x="400" y="404" fill="#e5484d">hole r111</text>
+  </g>
+</svg>

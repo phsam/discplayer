@@ -1,0 +1,27 @@
+# artist – album – track   (one per line; album must match the title in index.html)
+# To pin an exact Deezer track, add its id as a 4th field: artist – album – track – 123456
+Helmet – Meantime – Unsung
+Static-X – Start a War – I'm the One
+Stone Temple Pilots – Purple – Interstate Love Song
+Faith No More – King for a Day… Fool for a Lifetime – Digging the Grave
+The Smashing Pumpkins – Siamese Dream – Today
+Korn – Follow the Leader – Freak on a Leash
+Johnny Cash – American IV: The Man Comes Around – Hurt
+Alice in Chains – Jar of Flies – No Excuses
+Temple of the Dog – Temple of the Dog – Hunger Strike
+Bush – Razorblade Suitcase – Swallowed
+Seether – Disclaimer II – Broken
+Audioslave – Audioslave – Like a Stone
+Soundgarden – Badmotorfinger – Rusty Cage
+System of a Down – System of a Down – Sugar
+Thrice – Vheissu – Image of the Invisible
+Third Eye Blind – Third Eye Blind – Semi-Charmed Life
+Silverchair – Freak Show – Freak
+Screaming Trees – Sweet Oblivion – Nearly Lost You
+Primus – Tales from the Punchbowl – Wynona's Big Brown Beaver
+Nirvana – In Utero – Heart-Shaped Box
+Local H – As Good as Dead – Bound for the Floor
+Mudvayne – Lost and Found – Happy?
+Limp Bizkit – Chocolate Starfish and the Hot Dog Flavored Water – Rollin' (Air Raid Vehicle)
+Cold – 13 Ways to Bleed on Stage – No One
+Creed – Weathered – My Sacrifice

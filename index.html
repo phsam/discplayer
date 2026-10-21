@@ -1,0 +1,605 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Pocket Disc Player</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@1,600;1,700&family=Familjen+Grotesk:wght@400;500;600&family=Share+Tech+Mono&family=Gochi+Hand&display=swap">
+<style>
+/* Layout: a walnut desk at night under a lamp; objects placed on a scene that rearranges for wide or tall screens */
+:root{
+  --desk:#2a190d; --desk-hi:#3b2414; --lamp:rgba(255,186,112,.24); --ink:#efe5d6; --ink-2:#b4a48e; --drop:rgba(10,5,2,.62);
+  --note:#f1cf55; --pen:#2b2f7a;
+  --f-display:"Archivo Narrow","Arial Narrow",sans-serif;
+  --f-body:"Familjen Grotesk",system-ui,sans-serif;
+  --f-lcd:"Share Tech Mono",ui-monospace,monospace;
+  --f-hand:"Gochi Hand","Comic Sans MS",cursive;
+  --plastic-hi:#69717b; --plastic:#454c55; --plastic-lo:#2c3137; --edge:#1b1e22;
+  color-scheme:dark;
+}
+body{color:var(--ink);font-family:var(--f-body);min-height:100vh;overflow-x:hidden;padding-block:24px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));box-sizing:border-box;
+  background-color:var(--desk);
+  background-image:
+    radial-gradient(70% 55% at 28% 14%,var(--lamp),transparent 72%),
+    radial-gradient(130% 110% at 45% 35%,transparent 45%,rgba(0,0,0,.6)),
+    url("wood.jpg");
+  background-size:auto,auto,900px 900px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.wrap{position:relative;margin:0 auto}
+.scene{position:absolute;left:0;top:0;transform-origin:0 0}
+.obj{position:absolute;left:0;top:0}
+.hp{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.batt{display:flex;flex-direction:column;gap:10px}
+.aa{position:relative;width:150px;height:32px;border-radius:5px;background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,0) 35%,rgba(0,0,0,.35) 75%,rgba(255,255,255,.12)),linear-gradient(90deg,#1c1c1e 0 64%,#b4692c 64%);box-shadow:4px 8px 8px -3px rgba(0,0,0,.6);font:600 10px/32px var(--f-body);letter-spacing:.14em;color:#d9d6d0;padding-left:14px;box-sizing:border-box}
+.aa::after{content:"";position:absolute;right:-6px;top:10px;width:7px;height:12px;border-radius:0 3px 3px 0;background:linear-gradient(180deg,#e2e4e7,#8b9096)}
+.aa::before{content:"";position:absolute;left:-2px;top:3px;width:3px;height:26px;border-radius:2px;background:#9aa0a6}
+#motes{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;mix-blend-mode:screen;z-index:20}
+
+/* ---------- player ---------- */
+.player{position:relative;width:440px;height:556px}
+.edge,.body{position:absolute;left:0;width:440px;height:520px;border-radius:220px 220px 200px 200px/210px 210px 180px 180px}
+.band{position:absolute;left:0;top:0;width:440px;height:520px;border-radius:220px 220px 200px 200px/210px 210px 180px 180px;background:linear-gradient(180deg,#3b414a,#2e3339);box-shadow:inset 0 -10px 24px rgba(0,0,0,.35);-webkit-mask:radial-gradient(circle at 220px 216px,transparent 199px,#000 200px);mask:radial-gradient(circle at 220px 216px,transparent 199px,#000 200px)}
+.bandline{position:absolute;left:20px;top:16px;width:400px;height:400px;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.55),0 0 0 2px rgba(255,255,255,.08);pointer-events:none}
+.edge{top:24px;background:linear-gradient(180deg,#2a2f35,var(--edge) 60%);box-shadow:0 30px 40px -12px var(--drop),0 8px 12px -4px var(--drop)}
+.body{top:0;background:radial-gradient(90% 70% at 38% 22%,var(--plastic-hi),var(--plastic) 48%,var(--plastic-lo));box-shadow:inset 0 2px 1px rgba(255,255,255,.18),inset 0 -14px 30px rgba(0,0,0,.35),inset 0 0 0 1px rgba(0,0,0,.35)}
+.body::after{content:"";position:absolute;inset:0;border-radius:inherit;background:repeating-radial-gradient(circle at 30% 30%,rgba(255,255,255,.025) 0 1px,transparent 1px 3px);pointer-events:none}
+.seam{position:absolute;left:29px;top:25px;width:382px;height:382px;border-radius:50%;box-shadow:0 0 0 2px #15181b,0 1px 0 3px rgba(255,255,255,.07)}
+.bay{position:absolute;left:35px;top:31px;width:370px;height:370px;border-radius:50%;background:radial-gradient(circle,#24282d 0 14%,#0f1113 15% 60%,#1a1d21 100%);box-shadow:inset 0 6px 18px rgba(0,0,0,.8)}
+.bay::after{content:"";position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#9aa0a6,#3a3f45);box-shadow:0 0 0 5px #1b1e22}
+.disc{position:absolute;left:50px;top:46px;width:340px;height:340px;border-radius:50%;transition:transform .22s ease,opacity .22s ease}
+.disc.lift{transform:scale(1.14) translateY(-30px);opacity:0}
+.disc.drop{transform:scale(.92);opacity:0;transition:none}
+.disc svg{display:block;width:100%;height:100%;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.6)}
+
+.lid{position:absolute;left:35px;top:31px;width:370px;height:370px;border-radius:50%;cursor:default;transform-origin:50% 2%;transition:transform .5s cubic-bezier(.3,1.25,.45,1),filter .5s;z-index:3}
+.lid::before{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(85% 85% at 40% 25%,#646c76,#474e57 50%,#353a41);box-shadow:inset 0 2px 1px rgba(255,255,255,.16),inset 0 -6px 14px rgba(0,0,0,.3);-webkit-mask:radial-gradient(circle at 50% 56%,transparent 101px,#000 102px);mask:radial-gradient(circle at 50% 56%,transparent 101px,#000 102px)}
+.lid::before{-webkit-mask:radial-gradient(circle at 50% 50%,transparent 109px,#000 110px);mask:radial-gradient(circle at 50% 50%,transparent 109px,#000 110px)}
+.tongue{position:absolute;left:-12px;top:66px;width:164px;height:88px;border-radius:0 44px 44px 0;background:linear-gradient(180deg,#535a63,#40464e 55%,#383d44);box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset -1px 0 0 rgba(255,255,255,.08),8px 7px 14px -4px rgba(0,0,0,.75);z-index:2}
+.tongue::after{content:"";position:absolute;right:28px;top:50%;width:18px;height:18px;margin-top:-9px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#4c535b,#2f343a);box-shadow:inset 0 1px 2px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.1)}
+.tongue svg{position:absolute;left:48px;top:50%;height:27.2px;margin-top:-13.6px;fill:#d5d9dd;filter:drop-shadow(0 -1px 0 rgba(0,0,0,.4))}
+.glass{position:absolute;left:75px;top:75px;width:220px;height:220px;border-radius:50%;background:rgba(14,16,20,.5);box-shadow:inset 0 0 0 3px #2a2f35,inset 0 0 0 4px rgba(255,255,255,.12),inset 0 10px 22px rgba(0,0,0,.55);overflow:hidden}
+.glass::before{content:"";position:absolute;width:76px;height:320px;left:112px;top:-50px;transform:rotate(32deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.16) 40%,rgba(255,255,255,.05) 70%,transparent)}
+.glass::after{content:"";position:absolute;width:14px;height:320px;left:200px;top:-50px;transform:rotate(32deg);background:rgba(255,255,255,.07)}
+.print{position:absolute;left:0;right:0;text-align:center;color:#d5d9dd;pointer-events:none}
+.print.model{top:24px}
+.print.model svg{display:block;margin:0 auto;height:14px;fill:currentColor;filter:drop-shadow(0 -1px 0 rgba(0,0,0,.4))}
+.print.sub{top:52px;font:600 9px/1 var(--f-body);letter-spacing:.22em;color:#aab1b8}
+.print.dz{top:318px;left:50%;right:auto;transform:translateX(-50%);display:flex;align-items:center;gap:7px;padding:3px 4px;border-radius:3px;font:600 9px/1 var(--f-body);letter-spacing:.3em;color:#9aa1a8;text-decoration:none;white-space:nowrap;pointer-events:auto;cursor:pointer}
+.print.dz svg{display:block;height:12px;width:auto}
+.print.dz svg path{fill:currentColor}
+.print.dz:focus-visible{outline:2px solid #8fb4d9;outline-offset:2px}
+.player.open .lid{transform:perspective(1100px) rotateX(-74deg);filter:brightness(.7);cursor:pointer}
+.player.open .lid:hover{filter:brightness(.78)}
+
+.latch{position:absolute;right:6px;top:126px;z-index:4;width:30px;height:84px;border:0;padding:0;border-radius:10px;background:linear-gradient(90deg,#2b3036,#3f454d);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 2px rgba(0,0,0,.5);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.latch span{writing-mode:vertical-rl;font:600 9px/1 var(--f-body);letter-spacing:.25em;color:#c9ced3}
+.latch:active{transform:translateY(4px)}
+
+.panel{position:absolute;inset:0;pointer-events:none}
+.panel>*{position:absolute;pointer-events:auto}
+.panel .rocker{left:34px;top:398px;transform:rotate(38deg)}
+.panel .eject{left:386px;top:347px;width:34px;height:34px;border-radius:50%}
+.panel .eject svg{width:13px;height:13px}
+.panel .ring{left:310px;top:390px;width:80px;height:80px;border-radius:50%;background:#15181b;box-shadow:0 1px 0 rgba(255,255,255,.08),inset 0 2px 4px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center}
+.panel .lcdwrap{left:154px;top:432px}
+.btn{border:0;padding:0;cursor:pointer;color:#cdd2d7;display:flex;align-items:center;justify-content:center;font-size:12px;background:radial-gradient(circle at 40% 30%,#3c424a,#23272c);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 3px 0 #121417,0 4px 6px rgba(0,0,0,.45);transition:transform .06s,box-shadow .06s}
+.btn:active,.btn.pressed{transform:translateY(3px);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 #121417,0 1px 2px rgba(0,0,0,.4)}
+.btn:focus-visible,.latch:focus-visible{outline:2px solid #8fb4d9;outline-offset:3px}
+.rocker{display:flex;border-radius:22px;background:#15181b;padding:3px;gap:3px;box-shadow:0 1px 0 rgba(255,255,255,.08)}
+.rocker .btn{width:52px;height:38px}
+.rocker .btn:first-child{border-radius:19px 6px 6px 19px}
+.rocker .btn:last-child{border-radius:6px 19px 19px 6px}
+.play{width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 40% 30%,#566069,#2c3238)}
+.btn svg{width:16px;height:16px;fill:currentColor}
+.lcdwrap{display:flex;flex-direction:column;align-items:center;gap:5px}
+.lcd{position:relative;width:132px;height:44px;border-radius:5px;background:linear-gradient(180deg,#8f9a83,#a6b098);box-shadow:inset 0 2px 5px rgba(0,0,0,.5),0 0 0 3px #15181b,0 1px 0 4px rgba(255,255,255,.07);font:24px/44px var(--f-lcd);color:#20281b;letter-spacing:.06em;padding:0 10px;box-sizing:border-box;display:flex;justify-content:space-between}
+.lcd .ghost{position:absolute;inset:0 10px;display:flex;justify-content:space-between;color:rgba(32,40,27,.09)}
+.lcd .live{position:relative;display:flex;justify-content:space-between;width:100%}
+.lcd.blink .t{animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.lcdlab{display:flex;justify-content:space-between;width:120px;font:600 8px/1 var(--f-body);letter-spacing:.18em;color:#9aa1a8}
+.shake{animation:shake .28s}
+@keyframes shake{25%{translate:5px}50%{translate:-5px}75%{translate:3px}}
+
+/* ---------- jewel case ---------- */
+.caseblock{display:flex;flex-direction:column;align-items:center;gap:18px}
+.case{position:relative;width:394px;height:354px;perspective:2200px;perspective-origin:0 50%;cursor:pointer;outline:none}
+.case:focus-visible{outline:2px solid #8fb4d9;outline-offset:6px}
+.recess{position:absolute;left:45px;top:5px;width:344px;height:344px;border-radius:50%;background:radial-gradient(circle,#101214 60%,#181b1f);box-shadow:inset 0 3px 8px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.05)}
+.hubbase{position:absolute;left:167px;top:127px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,#0c0d0f 0 30%,#26292d 31% 44%,#141618 45% 66%,#2a2d31 67% 70%,#131518 71%);box-shadow:0 0 0 1px rgba(255,255,255,.05)}
+.hub{position:absolute;left:187px;top:147px;width:60px;height:60px;pointer-events:none}
+.hub svg{display:block;width:100%;height:100%;filter:drop-shadow(0 1px 1px rgba(0,0,0,.7))}
+.tdisc{position:absolute;left:52px;top:12px;width:330px;height:330px;border-radius:50%;opacity:0;transition:transform .2s ease,opacity .2s ease}
+.tdisc.in{opacity:1}
+.tdisc.in.lift{transform:scale(1.1) translate(-40px,-20px);opacity:0}
+.tdisc svg{display:block;width:100%;height:100%;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.6)}
+.lidc{position:absolute;z-index:2;left:40px;top:0;width:354px;height:354px;transform-origin:-40px 50%;transform-style:preserve-3d;transition:transform .3s cubic-bezier(.4,.1,.2,1)}
+.case.open .lidc{transform:rotateY(-97deg)}
+.face{position:absolute;inset:0;border-radius:0 3px 3px 0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+/* the lid is a shallow acrylic tray: booklet against the front wall, held by four tabs, walls 12px deep */
+.face.back{transform:translateZ(-5px) rotateY(180deg);border-radius:3px 0 0 3px;background:rgba(214,226,238,.14)}
+.face.back::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(62deg,transparent 30%,rgba(255,255,255,.14) 42%,transparent 52%),linear-gradient(90deg,rgba(0,0,0,.08),rgba(0,0,0,.22));box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)}
+/* a booklet seen from its back page: fold on the hinge side, the pages beneath creeping out along the open edge */
+.booklet{position:absolute;inset:5px 5px 6px 10px;border-radius:1px 4px 4px 1px;background:#ededeb;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12),-1px 0 0 #bdb9af,-2px 1px 0 #f3f1ea,-3px 1px 0 #b8b4aa,-4px 2px 0 #eeece4,-5px 2px 0 #b3afa5,-6px 3px 0 #e8e5dc,-7px 3px 0 #aeaa9f,-7px 4px 0 rgba(0,0,0,.35),-4px 6px 8px rgba(0,0,0,.45)}
+.booklet::after{content:"";position:absolute;z-index:1;pointer-events:none}
+.booklet::after{inset:0;border-radius:inherit;background:linear-gradient(270deg,rgba(0,0,0,.5),rgba(0,0,0,.18) 1.5px,rgba(255,255,255,.4) 4px,rgba(255,255,255,.12) 8px,rgba(0,0,0,.2) 13px,rgba(0,0,0,.06) 18px,transparent 28px),linear-gradient(90deg,rgba(255,255,255,.25),transparent 3px,rgba(0,0,0,.08) 5px,transparent 14px),radial-gradient(130% 100% at 35% 45%,transparent 55%,rgba(0,0,0,.14))}
+/* clear hooked clips molded into the top and bottom walls, one near the outer edge and one near the hinge, pinching the booklet */
+.tab{position:absolute;z-index:3;width:24px;height:12px;background:radial-gradient(60% 90% at 50% 0,rgba(255,255,255,.55),rgba(222,234,246,.22) 70%);border:1px solid rgba(255,255,255,.85);border-top:0;border-radius:0 0 12px 12px/0 0 11px 11px;box-shadow:0 2px 2px -1px rgba(0,0,0,.45),inset 0 -2px 2px rgba(255,255,255,.35)}
+.tab::after{content:"";position:absolute;left:6px;right:6px;top:1px;height:5px;border:1px solid rgba(255,255,255,.75);border-top:0;border-radius:0 0 6px 6px;box-shadow:0 1px 1px rgba(0,0,0,.25)}
+.tab.t{top:0}.tab.b{bottom:0;transform:scaleY(-1)}
+.tab.o{left:17%}.tab.h{right:8%}
+.face.lip{transform:translateZ(-12px) rotateY(180deg);border-radius:3px 0 0 3px;border:solid rgba(236,244,252,.32);border-width:3px 0 3px 3px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.18),0 0 0 1px rgba(255,255,255,.2);pointer-events:none}
+/* the lid pivots on the spine's outer edge; this clear strip spans the spine, so opening lifts it off and bares the spine */
+.bridge{position:absolute;left:-40px;top:0;width:40px;height:100%;border-radius:3px 0 0 3px;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,.14),rgba(214,226,238,.05) 40%,rgba(255,255,255,.1));box-shadow:inset 0 0 0 1px rgba(255,255,255,.28)}
+.ls{position:absolute;backface-visibility:hidden;-webkit-backface-visibility:hidden;pointer-events:none;background:linear-gradient(var(--d),rgba(255,255,255,.65) 0 1px,#eeebe3 1px 2px,#bcb8ae 2px 2.5px,#eeebe3 2.5px 3.5px,#bcb8ae 3.5px 4px,#e6e3da 4px 5.5px,rgba(0,0,0,.3) 5.5px 6px,rgba(214,228,242,.2) 6px calc(100% - 1.5px),rgba(255,255,255,.7) calc(100% - 1.5px))}
+.ls.r{--d:90deg;left:100%;top:0;width:12px;height:100%;transform-origin:0 50%;transform:rotateY(90deg)}
+.ls.t{--d:0deg;left:0;bottom:100%;width:100%;height:12px;transform-origin:50% 100%;transform:rotateX(90deg)}
+.ls.b{--d:180deg;left:0;top:100%;width:100%;height:12px;transform-origin:50% 0;transform:rotateX(-90deg)}
+@media (prefers-reduced-motion: reduce){.lidc,.tdisc{transition:none}}
+.case .tray{position:absolute;inset:0;border-radius:3px;background:radial-gradient(70% 70% at 55% 45%,#23272c,#131518);box-shadow:0 22px 30px -10px var(--drop),0 4px 8px -2px var(--drop)}
+.inlay{position:absolute;left:0;top:0;width:394px;height:354px;border-radius:3px;background:center/cover no-repeat}
+/* with tray art the molding is clear plastic over it */
+/* with tray art the molding is clear plastic over it: a bevelled disc well, a raised ring with clear teeth, gloss on top */
+.tray.clear .recess{background:radial-gradient(circle closest-side,transparent 94%,rgba(0,0,0,.14) 98.5%,rgba(255,255,255,.18) 100%);box-shadow:0 0 0 1px rgba(255,255,255,.32),0 1px 0 2px rgba(0,0,0,.14),inset 0 0 0 1px rgba(0,0,0,.2),inset 0 3px 4px -2px rgba(0,0,0,.3)}
+.tray.clear .hubbase{left:153px;top:113px;width:128px;height:128px;background:radial-gradient(circle closest-side,transparent 0 50%,rgba(255,255,255,.4) 51% 52.5%,rgba(0,0,0,.18) 53.5% 56%,rgba(255,255,255,.07) 57% 84%,rgba(0,0,0,.16) 85% 87%,rgba(255,255,255,.45) 88% 90%,rgba(0,0,0,.1) 92%,transparent 97%);box-shadow:none}
+.glass{display:none;position:absolute;left:40px;top:0;width:354px;height:354px;border-radius:0 3px 3px 0;pointer-events:none;background:linear-gradient(118deg,rgba(255,255,255,.16) 0 7%,rgba(255,255,255,.05) 18%,transparent 34%,transparent 64%,rgba(255,255,255,.07) 71%,transparent 79%),linear-gradient(rgba(214,226,238,.05),rgba(214,226,238,.05));box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),inset 0 0 0 4px rgba(255,255,255,.05),inset 0 0 0 5px rgba(0,0,0,.18),inset 6px 0 8px -4px rgba(0,0,0,.45)}
+.tray.clear .glass{display:block}
+.tray.clear .hub .ht{fill:rgba(236,243,250,.3);stroke:rgba(255,255,255,.6)}
+.tray.clear .hub .hc{fill:rgba(236,243,250,.35);stroke:rgba(255,255,255,.6)}
+.tray.clear .hub .hr{stroke:rgba(255,255,255,.35);stroke-width:1}
+.tray.clear .hub svg{filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+.case .cover{position:absolute;left:3px;top:3px;width:348px;height:348px}
+/* the booklet's folded spine, seen through the lid along the hinge */
+.case .cover::after{content:"";position:absolute;z-index:1;pointer-events:none}
+.case .cover::after{inset:0;background:linear-gradient(90deg,rgba(0,0,0,.5),rgba(0,0,0,.15) 1.5px,rgba(255,255,255,.35) 4px,rgba(255,255,255,.1) 8px,rgba(0,0,0,.18) 12px,transparent 24px)}
+.face.front::before,.face.front::after{content:"";position:absolute;right:3px;width:5px;height:28px;border-radius:3px;background:rgba(255,255,255,.22);box-shadow:inset 0 0 0 1px rgba(255,255,255,.2);z-index:3}
+.face.front::before{top:16px}.face.front::after{bottom:16px}
+.case .cover svg{display:block;width:100%;height:100%}
+.case .shell{position:absolute;inset:0;border-radius:3px;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,.22) 0 8%,rgba(255,255,255,.04) 22%,transparent 40%,transparent 62%,rgba(255,255,255,.08) 70%,transparent 78%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),inset 0 0 0 2px rgba(0,0,0,.25)}
+.case .hinge{position:absolute;left:0;top:0;bottom:0;width:40px;border-radius:3px 0 0 3px;background:repeating-linear-gradient(180deg,rgba(0,0,0,.22) 0 1px,transparent 1px 4px),linear-gradient(90deg,#24272b,#2e3236);box-shadow:inset -1px 0 0 rgba(255,255,255,.25)}
+/* with tray art the spine is clear too, the tray card running on under it */
+.case.clear .hinge{background:linear-gradient(90deg,rgba(255,255,255,.16),rgba(214,226,238,.04) 40%,rgba(0,0,0,.14));box-shadow:inset 1px 0 0 rgba(255,255,255,.35),inset -1px 0 0 rgba(255,255,255,.3),inset 0 0 0 3px rgba(214,226,238,.06)}
+.meta{text-align:center;display:flex;flex-direction:column;gap:3px;min-width:0;max-width:394px}
+.meta .ttl{font:italic 700 24px/1.15 var(--f-display);text-wrap:balance}
+.meta .art{font-size:15px;color:var(--ink-2)}
+.meta .hint{max-width:920px;margin:40px auto 0;font-size:13px;color:var(--ink-2);text-align:center}
+@media (prefers-reduced-motion: reduce){.lid,.disc,.case .cover{transition:none}}
+
+/* ---------- inline volume remote on the earbud cord ---------- */
+.remote{width:92px;height:30px;z-index:1}
+.remote .rb{position:absolute;inset:0;border-radius:9px;background:linear-gradient(180deg,#2a2b2f,#45474c 22%,#17181b 55%,#050506);box-shadow:var(--sx) var(--sy) 9px -2px rgba(0,0,0,.7),calc(var(--sx)/3) calc(var(--sy)/3) 2px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,240,220,.22)}
+.remote .rb::before,.remote .rb::after{content:"";position:absolute;top:9px;width:10px;height:12px;background:linear-gradient(180deg,#0a0a0b,#36383c 30%,#121316 60%,#000);z-index:-1}
+.remote .rb::before{left:-7px;border-radius:5px 2px 2px 5px}.remote .rb::after{right:-7px;border-radius:2px 5px 5px 2px}
+.remote .lab{position:absolute;top:2px;font:600 5px/1 var(--f-body);letter-spacing:.12em;color:#7d8187;pointer-events:none}
+.remote .lab.lo{left:11px;font-size:7px}.remote .lab.hi{right:11px;font-size:7px}.remote .lab.v{left:0;right:0;text-align:center;bottom:2px;top:auto}
+.remote input{position:absolute;left:10px;top:9px;width:72px;height:10px;margin:0;-webkit-appearance:none;appearance:none;background:transparent;cursor:ew-resize}
+.remote input::-webkit-slider-runnable-track{height:4px;margin-top:3px;border-radius:2px;background:#000;box-shadow:inset 0 1px 1px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.08)}
+.remote input::-moz-range-track{height:4px;border-radius:2px;background:#000;box-shadow:0 1px 0 rgba(255,255,255,.08)}
+.remote input::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;margin-top:-4px;border-radius:3px;border:0;background:repeating-linear-gradient(90deg,rgba(0,0,0,.35) 0 1px,transparent 1px 3px),linear-gradient(180deg,#f4f1ec,#a7acb1 45%,#5b6066);box-shadow:0 1px 2px rgba(0,0,0,.8)}
+.remote input::-moz-range-thumb{width:12px;height:12px;border-radius:3px;border:0;background:repeating-linear-gradient(90deg,rgba(0,0,0,.35) 0 1px,transparent 1px 3px),linear-gradient(180deg,#f4f1ec,#a7acb1 45%,#5b6066);box-shadow:0 1px 2px rgba(0,0,0,.8)}
+.remote input:focus-visible{outline:2px solid #8fb4d9;outline-offset:3px;border-radius:3px}
+</style>
+
+<h1 class="sr">Pocket Disc Player</h1>
+<div class="wrap" id="wrap"><div class="scene" id="scene">
+
+  <div class="obj" id="pwrap">
+    <div class="player" id="player">
+      <div class="edge"></div>
+      <div class="body"></div>
+      <div class="band"></div>
+      <div class="bandline"></div>
+      <div class="seam"></div>
+      <div class="bay"></div>
+      <div class="disc" id="disc"></div>
+      <div class="lid" id="lid" role="button" aria-label="Close lid" tabindex="-1">
+        <div class="print model"><svg viewBox="0 0 93 15" aria-label="SAMP" role="img"><path d="M82.0654 6.09316H83.986C85.7523 6.09316 86.9907 5.92334 87.7009 5.5837C88.4206 5.23726 88.7804 4.65648 88.7804 3.84134C88.7804 3.00582 88.4346 2.42164 87.743 2.08879C87.0607 1.74915 85.7336 1.57933 83.7617 1.57933H82.0654V6.09316ZM82.0654 11.1164C82.0654 11.6803 82.1682 12.0369 82.3738 12.1863C82.5888 12.3358 83.1262 12.4105 83.986 12.4105H85.3318V14H75V12.4105H76.1215C76.972 12.4105 77.5 12.3392 77.7056 12.1965C77.9112 12.0471 78.014 11.687 78.014 11.1164V2.87336C78.014 2.30277 77.9112 1.94614 77.7056 1.80349C77.5 1.65405 76.972 1.57933 76.1215 1.57933H75V0H85.1355C87.7336 0 89.6916 0.322659 91.0093 0.967977C92.3364 1.61329 93 2.57108 93 3.84134C93 4.53421 92.8178 5.13877 92.4533 5.65502C92.0981 6.17128 91.5561 6.60941 90.8271 6.96943C90.3037 7.22077 89.5748 7.40078 88.6402 7.50946C87.7056 7.61815 86.4019 7.67249 84.729 7.67249H82.0654V11.1164Z"/><path d="M62.2033 14V12.4105H63.6082C64.5347 12.4105 65.1099 12.3392 65.3339 12.1965C65.5578 12.0471 65.6698 11.687 65.6698 11.1164V2.06841L58.92 14H56.8583L50.5055 1.83406V11.1164C50.5055 11.687 50.6175 12.0471 50.8415 12.1965C51.0655 12.3392 51.6407 12.4105 52.5671 12.4105H53.8194V14H44V12.4105H45.1301C46.0565 12.4105 46.6317 12.3392 46.8557 12.1965C47.0797 12.0471 47.1917 11.687 47.1917 11.1164V2.87336C47.1917 2.30277 47.0797 1.94614 46.8557 1.80349C46.6317 1.65405 46.0565 1.57933 45.1301 1.57933H44V0H53.7888L58.4466 9.0786L63.6388 0H73V1.57933H71.8088C70.8722 1.57933 70.2868 1.65405 70.0527 1.80349C69.8287 1.95294 69.7167 2.30956 69.7167 2.87336V11.1164C69.7167 11.6803 69.8287 12.0369 70.0527 12.1863C70.2868 12.3358 70.8722 12.4105 71.8088 12.4105H73V14H62.2033Z"/><path d="M32.5964 7.88646L29.8923 3.04658L27.4313 7.88646H32.5964ZM19 14V12.4105H19.6532C20.4432 12.4105 21.0306 12.3188 21.4155 12.1354C21.8104 11.9452 22.1497 11.5852 22.4333 11.0553L28.2517 0H32.6268L38.8554 11.0553C39.2098 11.7006 39.5339 12.0878 39.8276 12.2169C40.1314 12.3459 40.648 12.4105 41.3771 12.4105H42V14H31.1988V12.4105H32.8851C33.5636 12.4105 34.0194 12.3731 34.2523 12.2984C34.4954 12.2169 34.6169 12.0742 34.6169 11.8705C34.6169 11.7957 34.5967 11.7108 34.5561 11.6157C34.5258 11.5206 34.4549 11.378 34.3435 11.1878L33.4472 9.53712H26.5654L25.6691 11.2999C25.6488 11.3474 25.6134 11.4187 25.5627 11.5138C25.4615 11.7108 25.4108 11.8501 25.4108 11.9316C25.4108 12.115 25.507 12.2407 25.6995 12.3086C25.902 12.3765 26.3679 12.4105 27.0971 12.4105H28.7074V14H19Z"/><path d="M0.0620155 14.5776V8.73626H2.54264C2.88372 10.1442 3.66925 11.2225 4.89922 11.9712C6.1292 12.7129 7.7261 13.0838 9.68992 13.0838C11.1059 13.0838 12.186 12.9258 12.9302 12.6099C13.6848 12.294 14.062 11.8372 14.062 11.2397C14.062 10.704 13.7726 10.2679 13.1938 9.93132C12.6253 9.59478 11.7106 9.33036 10.4496 9.13805L6.99225 8.60234C4.51163 8.21772 2.72351 7.69918 1.62791 7.0467C0.542636 6.38736 0 5.50824 0 4.40934C0 3.07692 0.697674 2.00893 2.09302 1.20536C3.48837 0.401786 5.35401 0 7.68992 0C8.84755 0 9.92765 0.120192 10.9302 0.360577C11.9432 0.594093 12.9251 0.958104 13.876 1.45261L14.9922 0.42239H16.8992V5.77953H14.4806C14.1189 4.49519 13.354 3.49931 12.186 2.7919C11.0284 2.08448 9.57106 1.73077 7.81395 1.73077C6.5323 1.73077 5.54005 1.89217 4.83721 2.21497C4.13437 2.53091 3.78295 2.9739 3.78295 3.54396C3.78295 4.02473 4.03101 4.40934 4.52713 4.6978C5.02326 4.98626 5.81912 5.21291 6.91473 5.37775L11.2093 6.03709C13.4832 6.38049 15.1835 6.91964 16.3101 7.65453C17.4367 8.38256 18 9.31319 18 10.4464C18 11.7857 17.261 12.8812 15.7829 13.7328C14.3049 14.5776 12.3876 15 10.031 15C8.84238 15 7.66408 14.8558 6.49612 14.5673C5.32817 14.2788 4.1447 13.8393 2.94574 13.2486L2.24806 14.5776H0.0620155Z"/></svg></div>
+        <div class="print sub">PORTABLE COMPACT DISC PLAYER</div>
+        <div class="glass"><div class="tongue"><svg viewBox="0 0 437.333 268" aria-label="Compact Disc Digital Audio" role="img"><g transform="matrix(.13333 0 0 -.13333 0 268)"><path d="m 2923.55,1794.98 c -0.24,-9.21 -0.54,-16.77 -0.84,-19.48 -2.37,-20.75 0,-30.56 -59.83,-30.56 -59.83,0 -57.47,9.81 -59.83,30.56 -0.76,6.75 -1.48,43.7 -1.4,60.98 0.07,17.29 0.64,54.23 1.4,60.98 2.36,20.75 0,30.56 59.83,30.56 59.83,0 57.46,-9.81 59.83,-30.56 0.32,-2.83 0.6,-10.96 0.83,-20.73 h 81.84 c -0.52,18.54 -1.4,34.04 -2.32,42.12 -4.72,41.5 11.63,81.24 -140.09,81.24 -151.72,0 -135.37,-39.74 -140.09,-81.24 -1.53,-13.51 -2.95,-47.8 -2.81,-82.37 0.15,-34.57 1.28,-68.86 2.81,-82.37 4.72,-41.5 -11.63,-81.23 140.09,-81.23 151.72,0 135.37,39.73 140.09,81.23 0.9,7.89 1.65,22.88 2.16,40.87 h -81.67"/><path d="m 1953.15,1991.79 -79.85,-233.28 -79.85,233.28 -119.47,0.62 v -313.12 h 79.86 v 233.27 l 79.85,-233.27 h 79.86 l 79.22,233.27 v -233.27 h 79.85 v 313.12 l -119.47,-0.62"/><path d="m 3023.3,1992.41 h 229.5 v -79.85 h -74.82 v -233.27 h -79.85 v 233.27 h -74.83 v 79.85"/><path d="m 2407.75,1679.29 91.59,313.43 h 119.04 l 91.8,-313.43 h -79.85 l -18.86,64.76 h -104.78 l 14.85,50.93 h 74.84 l -37.1,127.64 -71.68,-243.33 h -79.85"/><path d="m 1481.68,1928.02 c 59.83,0 57.47,-9.81 59.83,-30.56 0.76,-6.75 1.33,-43.69 1.4,-60.98 0.07,-17.28 -0.64,-54.23 -1.4,-60.98 -2.36,-20.75 0,-30.56 -59.83,-30.56 -59.82,0 -57.47,9.81 -59.82,30.56 -0.77,6.75 -1.48,43.7 -1.41,60.98 0.07,17.29 0.64,54.23 1.41,60.98 2.35,20.75 0,30.56 59.82,30.56 l 0.09,72.07 c -151.71,0 -135.36,-39.74 -140.08,-81.24 -1.54,-13.51 -2.96,-47.8 -2.81,-82.37 0.14,-34.57 1.27,-68.86 2.81,-82.37 4.72,-41.5 -11.63,-81.23 140.08,-81.23 151.72,0 135.37,39.73 140.09,81.23 1.54,13.51 2.67,47.8 2.81,82.37 0.15,34.57 -1.27,68.86 -2.81,82.37 -4.72,41.5 11.63,81.24 -140.09,81.24 l -0.09,-72.07"/><path d="m 1212.07,1794.98 c -0.24,-9.21 -0.54,-16.77 -0.85,-19.48 -2.36,-20.75 0,-30.56 -59.83,-30.56 -59.82,0 -57.46,9.81 -59.82,30.56 -0.77,6.75 -1.48,43.7 -1.4,60.98 0.07,17.29 0.63,54.23 1.4,60.98 2.36,20.75 0,30.56 59.82,30.56 59.83,0 57.47,-9.81 59.83,-30.56 0.32,-2.83 0.61,-10.96 0.84,-20.73 h 81.84 c -0.53,18.54 -1.4,34.04 -2.32,42.12 -4.72,41.5 11.63,81.24 -140.09,81.24 -151.717,0 -135.37,-39.74 -140.09,-81.24 -1.53,-13.51 -2.95,-47.8 -2.81,-82.37 0.15,-34.57 1.28,-68.86 2.81,-82.37 4.72,-41.5 -11.627,-81.23 140.09,-81.23 151.72,0 135.37,39.73 140.09,81.23 0.89,7.89 1.65,22.88 2.15,40.87 h -81.66"/><path d="m 2267.05,1750.9 -48.46,0.03 v 71.42 l 48.45,0.29 c 59.82,0 57.96,9.81 60.32,30.56 0.77,6.76 0.61,1.21 0.54,18.49 -0.08,17.29 0.23,11.35 -0.54,18.1 -2.36,20.75 -0.5,30.57 -60.32,30.57 l -48.47,-0.13 0.08,-240.63 h -80.01 v 312.81 h 128.41 c 151.71,0 135.08,-39.84 140.67,-81.23 0.66,-4.91 0.66,-27.54 0.66,-39.74 0,-9.81 0,-32.44 -0.66,-39.62 -3.83,-41.59 11.04,-80.92 -140.67,-80.92"/><path d="m 3112.68,271.871 c 59.83,0 57.47,-9.808 59.83,-30.558 0.77,-6.754 1.33,-43.7 1.4,-60.985 0.08,-17.285 -0.63,-54.23 -1.4,-60.984 -2.36,-20.7502 0,-30.5588 -59.83,-30.5588 -59.82,0 -57.46,9.8086 -59.82,30.5588 -0.77,6.754 -1.48,43.699 -1.41,60.984 0.07,17.285 0.64,54.231 1.41,60.985 2.36,20.75 0,30.558 59.82,30.558 l 0.09,72.059 c -151.71,0 -135.36,-39.735 -140.08,-81.231 -1.54,-13.511 -2.96,-47.801 -2.81,-82.371 0.14,-34.57 1.27,-68.859 2.81,-82.3671 4.72,-41.4961 -11.63,-81.2343 140.08,-81.2343 151.72,0 135.37,39.7382 140.09,81.2343 1.54,13.5081 2.67,47.7971 2.81,82.3671 0.15,34.57 -1.27,68.86 -2.81,82.371 -4.72,41.496 11.63,81.231 -140.09,81.231 l -0.09,-72.059"/><path d="m 1848.85,26.168 91.59,313.434 h 119.04 l 91.8,-313.434 h -79.85 l -18.86,64.7656 h -104.78 l 14.85,50.9254 h 74.84 l -37.1,127.645 -71.68,-243.336 h -79.85"/><path d="m 1183.43,26.168 91.59,313.434 h 119.04 l 91.8,-313.434 h -79.85 l -18.87,64.7656 h -104.77 l 14.84,50.9254 h 74.84 l -37.09,127.645 -71.68,-243.336 h -79.85"/><path d="M 447.602,336.258 V 23.1328 h -79.86 V 336.258 h 79.86"/><path d="M 914.754,336.258 V 23.1328 H 834.906 V 336.258 h 79.848"/><path d="M 957.199,336.258 H 1186.7 V 256.41 h -74.83 V 23.1328 h -79.84 V 256.41 h -74.831 v 79.848"/><path d="m 1609.23,102.355 v 233.903 h -79.86 V 22.8203 h 206.23 v 79.5347 h -126.37"/><path d="M 2921.75,336.258 V 23.1328 h -79.84 V 336.258 h 79.84"/><path d="m 2607.07,336.07 h 43.38 c 151.72,0 135.37,-39.925 140.09,-81.422 1.53,-13.507 2.96,-37.738 2.81,-72.308 -0.15,-34.57 -1.28,-64.461 -2.81,-77.973 -4.72,-41.4959 11.63,-81.2342 -140.09,-81.2342 H 2511.18 V 336.07 h 95.89 l -1.26,-71.961 -14.46,0.094 V 94.5625 l 59.01,0.6328 c 59.82,0 57.46,9.8087 59.82,30.5587 0.77,6.754 1.48,39.301 1.41,56.586 -0.07,17.289 -0.64,44.172 -1.41,50.926 -2.36,20.75 0,30.558 -59.82,30.558 l -44.55,0.285 1.26,71.961"/><path d="m 2458.77,180.328 -0.09,155.934 h -81.59 V 180.328 c 0.07,-17.285 -0.64,-54.23 -1.41,-60.984 -2.36,-20.7502 0,-30.5588 -59.82,-30.5588 -59.82,0 -57.47,9.8086 -59.82,30.5588 -0.77,6.754 -1.36,43.699 -1.29,60.984 l 0.12,155.93 h -81.82 v -155.93 c 0.15,-34.57 1.28,-68.859 2.81,-82.3671 4.72,-41.4961 -11.63,-81.2343 140.09,-81.2343 151.72,0 135.37,39.7382 140.09,81.2343 1.53,13.5081 2.58,47.7971 2.73,82.3671"/><path d="m 701.711,138.824 c -0.242,-9.207 -0.543,-16.769 -0.852,-19.48 -2.355,-20.7502 0,-30.5588 -59.824,-30.5588 -59.824,0 -57.465,9.8086 -59.824,30.5588 -0.77,6.754 -1.477,43.699 -1.406,60.984 0.074,17.285 0.636,54.231 1.406,60.985 2.359,20.75 0,30.558 59.824,30.558 59.824,0 57.469,-9.808 59.824,-30.558 0.325,-2.833 0.61,-0.907 0.836,-10.68 l 81.844,0.004 c -0.527,18.547 -1.406,23.984 -2.324,32.062 -4.719,41.496 11.629,81.231 -140.086,81.231 -151.719,0 -135.371,-39.735 -140.086,-81.231 -1.535,-13.511 -2.957,-47.801 -2.813,-82.371 0.149,-34.57 1.278,-68.859 2.813,-82.3671 4.715,-41.4961 -11.633,-81.2343 140.086,-81.2343 151.715,0 135.367,39.7382 140.086,81.2343 0.898,7.8911 1.656,22.8751 2.16,40.8631 h -81.664"/><path d="m 640.938,189.125 v -50.301 h 142.437 v 50.301 H 640.938"/><path d="m 130.387,336.07 h 43.383 c 151.718,0 135.371,-39.925 140.085,-81.422 1.54,-13.507 2.958,-37.738 2.813,-72.308 -0.148,-34.57 -1.273,-64.461 -2.813,-77.973 C 309.141,62.8711 325.488,23.1328 173.77,23.1328 H 34.4961 V 336.07 h 95.8909 l -1.258,-71.961 -14.461,0.094 V 94.5625 l 59.008,0.6328 c 59.824,0 57.465,9.8087 59.824,30.5587 0.77,6.754 1.48,39.301 1.406,56.586 -0.07,17.289 -0.636,44.172 -1.406,50.926 -2.359,20.75 0,30.558 -59.824,30.558 l -44.547,0.285 1.258,71.961"/><path d="m 714.137,500.246 -499.821,0.582 c -72.32,0 -130.941,58.633 -130.941,130.945 v 760.797 c 0,72.32 58.621,130.94 130.941,130.94 l 312.821,0.36 c 37.562,0 68.027,30.45 68.027,68.02 l 0.914,304.19 c 0,15.74 12.77,28.51 28.512,28.51 h 183.387 c 15.742,0 28.519,-12.77 28.519,-28.51 l 1.883,-1367.424 c 0,-15.742 -12.77,-28.519 -28.512,-28.519 l -95.73,0.109 -2.328,-67.941 125.089,0.035 c 37.567,0 68.028,30.453 68.028,68.027 V 1925.14 c 0,37.56 -30.461,68.01 -68.028,68.01 H 596.301 c -37.563,0 -68.028,-30.45 -68.028,-68.01 l 0.344,-304.96 c 0,-15.74 -12.769,-28.52 -28.523,-28.52 l -285.778,0.52 c -110.25,0 -199.6246,-89.36 -199.6246,-199.61 V 631.773 c 0,-110.238 89.3746,-199.613 199.6246,-199.613 l 497.493,0.145 2.328,67.941"/><path d="m 528.266,780.281 v 492.199 c 0,41.25 -33.442,74.69 -74.7,74.69 -41.246,0 -74.687,-33.44 -74.687,-74.69 V 741.176 c 0,-41.246 33.441,-74.696 74.687,-74.696 41.258,0 74.7,33.45 74.7,74.696 v 39.105 l 67.894,-2.324 v -36.781 c 0,-78.742 -63.844,-142.582 -142.594,-142.582 -78.738,0 -142.582,63.84 -142.582,142.582 v 531.304 c 0,78.74 63.844,142.59 142.582,142.59 78.75,0 142.594,-63.85 142.594,-142.59 V 777.957 l -67.894,2.324"/><path d="m 1189.2,500.25 -93.54,-0.004 c -15.76,0 -28.52,12.777 -28.52,28.52 l 1.14,965.624 c 0,15.75 12.77,28.52 28.52,28.52 h 183.39 c 15.75,0 28.52,-12.77 28.52,-28.52 l 1.88,-965.613 c 0,-15.754 -12.77,-28.519 -28.51,-28.519 l -92.88,-0.008 v -67.664 l 119.91,-0.125 c 37.58,0 68.03,30.453 68.03,68.016 V 1523.45 c 0,37.56 -30.45,68.02 -68.03,68.02 H 1068.5 c -37.56,0 -68.01,-30.46 -68.01,-68.02 l -0.14,-1022.712 c 0,-37.574 30.22,-68.027 67.78,-68.027 l 121.07,-0.125 v 67.664"/><path d="m 2053.17,1332.91 -201.47,0.28 c -62,0 -112.27,-50.27 -112.27,-112.26 0,-62 50.27,-112.27 112.27,-112.27 l 276.03,-0.75 c 72.31,0 130.94,-58.63 130.94,-130.941 l -0.92,-343.637 c 0,-72.324 -58.64,-130.941 -130.95,-130.941 l -547.94,-1 c -15.75,0 -28.52,12.777 -28.52,28.523 V 663 c 0,15.754 12.77,28.52 28.52,28.52 l 373.44,1.218 c 62,0 112.27,50.258 112.27,112.262 0,62 -50.27,112.258 -112.27,112.258 l -270.37,1.066 c -72.31,0 -130.94,58.633 -130.94,130.946 v 343.3 c 0,72.32 58.63,130.94 130.94,130.94 l 507.93,2.38 c 15.74,0 28.51,-12.78 28.51,-28.52 l 0.01,-136.12 c 0,-15.75 -12.77,-28.53 -28.52,-28.53 l -136.69,0.19 -2.33,-66.93 167.05,-0.05 c 37.57,0 68.03,30.23 68.03,67.79 l 0.26,190.68 c 0,37.57 -30.46,68.03 -68.03,68.03 l -536.22,-0.25 c -110.24,0 -199.61,-89.36 -199.61,-199.61 v -343.3 c 0,-110.239 89.37,-199.614 199.61,-199.614 l 270.37,0.461 c 24.93,0 45.13,-20.199 45.13,-45.117 0,-24.93 -20.2,-45.133 -45.13,-45.133 l -402.5,0.082 c -37.57,0 -68.01,-30.453 -68.01,-68.027 V 501.625 c 0,-37.574 30.44,-68.027 68.01,-68.027 l 577,0.121 c 110.24,0 199.61,89.363 199.61,199.613 l 0.93,343.637 c 0,110.231 -89.38,199.611 -199.61,199.611 l -276.03,-0.79 c -24.92,0 -45.12,20.21 -45.12,45.14 0,24.91 20.2,45.11 45.12,45.11 l 199.14,-0.06 2.33,66.93"/><path d="m 3068.5,1144.13 h 86.53 c 15.75,0 28.52,12.76 28.52,28.52 l -0.36,219.92 c 0,72.32 -58.62,130.94 -130.95,130.94 h -432.88 c -72.32,0 -130.96,-58.62 -130.96,-130.94 V 631.773 c 0,-72.312 58.64,-130.945 130.96,-130.945 h 432.88 c 72.33,0 130.95,58.633 130.95,130.945 l 0.36,209.11 c 0,15.754 -12.77,28.519 -28.52,28.519 h -163.31 c -15.74,0 -28.51,-12.765 -28.51,-28.519 l 0.92,-99.707 c 0,-78.742 -49.59,-142.582 -128.33,-142.582 -78.75,0 -128.33,63.84 -128.33,142.582 v 531.304 c 0,78.74 49.58,142.59 128.33,142.59 78.74,0 128.33,-63.85 128.33,-142.59 l -0.92,-99.83 c 0,-15.76 12.77,-28.52 28.51,-28.52 h 76.78 l -2.33,-68.56 h -102.74 c -37.56,0 -68.02,30.46 -68.02,68.02 l 0.82,128.89 c 0,41.25 -19.18,74.69 -60.43,74.69 -41.26,0 -60.44,-33.44 -60.44,-74.69 V 741.176 c 0,-41.246 19.18,-74.696 60.44,-74.696 41.25,0 60.43,33.45 60.43,74.696 l -0.82,128.762 c 0,37.562 30.46,68.027 68.02,68.027 h 220.52 c 37.58,0 68.03,-30.465 68.03,-68.027 l -0.12,-238.165 c 0,-110.238 -89.37,-199.613 -199.62,-199.613 h -432.88 c -110.25,0 -199.63,89.375 -199.63,199.613 v 760.797 c 0,110.25 89.38,199.61 199.63,199.61 h 432.88 c 110.25,0 199.62,-89.36 199.62,-199.61 l 0.12,-248.98 c 0,-37.56 -30.45,-68.02 -68.03,-68.02 h -117.78 l 2.33,68.56"/></g></svg></div></div>
+        <a class="print dz" id="dz" href="https://www.deezer.com" target="_blank" rel="noopener"><span>PREVIEWS FROM</span><svg viewBox="0 0 992 279" role="img" aria-label="Deezer"><path fill-rule="evenodd" clip-rule="evenodd" d="M353.119 68.1904H408.081C442.112 68.1904 466.176 90.8303 466.176 123.01C466.176 155.19 442.112 177.83 408.081 177.83H353.119V68.1904ZM395.836 148.213H405.803C416.482 148.213 422.178 141.094 422.178 123.01C422.178 104.927 416.482 97.8074 405.803 97.8074H395.836V148.213ZM562.999 177.83H472.724V68.1904H562.999V97.8074H515.298V110.48H560.151V134.686H515.298V148.213H562.999V177.83ZM663.525 177.83H573.251V68.1904H663.525V97.8074H615.825V110.48H660.678V134.686H615.825V148.213H663.525V177.83ZM991.164 177.83C985.012 161.065 976.408 143.177 964.834 123.126C978.37 119.156 986.465 110.622 986.465 97.5226C986.465 77.5881 968.097 68.1904 939.049 68.1904H879.246V177.83H921.962V132.478C931.453 148.462 938.445 163.546 943.036 177.83H991.164ZM921.962 117.172V97.8074H936.771C943.036 97.8074 946.596 101.225 946.596 107.49C946.596 113.755 943.036 117.172 936.771 117.172H921.962ZM868.994 177.83H778.719V68.1904H868.994V97.8074H821.294V110.48H866.147V134.686H821.294V148.213H868.994V177.83ZM673.779 97.8074H717.855C699.568 112.77 684.518 129.717 672.924 148.213V177.83H769.891V148.213H721.425C732.531 132.055 748.05 115.965 769.891 97.8074V68.1904H673.779V97.8074Z" fill="#fff"/><path fill-rule="evenodd" clip-rule="evenodd" d="M232.97 42.8737C235.539 27.9837 239.309 18.6204 243.485 18.6026H243.493C251.28 18.6294 257.592 51.1012 257.592 91.1924C257.592 131.284 251.271 163.782 243.476 163.782C240.28 163.782 237.331 158.264 234.957 149.017C231.205 182.867 223.419 206.136 214.405 206.136C207.431 206.136 201.172 192.158 196.97 170.114C194.101 212.038 186.88 241.783 178.44 241.783C173.143 241.783 168.314 229.996 164.739 210.804C160.44 250.421 150.508 278.18 138.926 278.18C127.344 278.18 117.394 250.43 113.113 210.804C109.564 229.996 104.735 241.783 99.4118 241.783C90.9722 241.783 83.7686 212.038 80.8818 170.114C76.6797 192.158 70.4383 206.136 63.4465 206.136C54.442 206.136 46.6469 182.875 42.895 149.017C40.5379 158.291 37.5717 163.782 34.376 163.782C26.5809 163.782 20.26 131.284 20.26 91.1924C20.26 51.1012 26.5809 18.6026 34.376 18.6026C38.5604 18.6026 42.3035 27.9926 44.8989 42.8737C49.0569 17.1985 55.8103 0.510986 63.4465 0.510986C72.5129 0.510986 80.3698 24.1114 84.0864 58.3808C87.7235 33.4389 93.241 17.5383 99.4206 17.5383C108.081 17.5383 115.443 48.8118 118.171 92.4355C123.3 70.0692 130.725 56.0377 138.944 56.0377C147.162 56.0377 154.587 70.0781 159.707 92.4355C162.444 48.8118 169.797 17.5383 178.458 17.5383C184.628 17.5383 190.137 33.4389 193.792 58.3808C197.5 24.1114 205.357 0.510986 214.423 0.510986C222.033 0.510986 228.812 17.2075 232.97 42.8737ZM0.0891113 84.0528C0.0891113 66.1311 3.67328 51.5989 8.0961 51.5989C12.5189 51.5989 16.1031 66.1311 16.1031 84.0528C16.1031 101.974 12.5189 116.507 8.0961 116.507C3.67328 116.507 0.0891113 101.974 0.0891113 84.0528ZM261.743 84.0528C261.743 66.1311 265.327 51.5989 269.75 51.5989C274.172 51.5989 277.757 66.1311 277.757 84.0528C277.757 101.974 274.172 116.507 269.75 116.507C265.327 116.507 261.743 101.974 261.743 84.0528Z" fill="#A238FF"/></svg></a>
+      </div>
+      <div class="panel">
+        <div class="rocker">
+          <button class="btn" id="back" aria-label="Previous disc"><svg viewBox="0 0 16 16"><path d="M3 3h2v10H3zM14 3v10L6 8z"/></svg></button>
+          <button class="btn" id="next" aria-label="Next disc"><svg viewBox="0 0 16 16"><path d="M11 3h2v10h-2zM2 3v10l8-5z"/></svg></button>
+        </div>
+        <button class="btn eject" id="latch" aria-label="Open lid"><svg viewBox="0 0 16 16"><path d="M8 2l6 7H2zM2 11h12v3H2z"/></svg></button>
+        <div class="ring"><button class="btn play" id="play" aria-label="Play or pause"><svg viewBox="0 0 16 16"><path d="M2 3v10l6-5zM10 3h2v10h-2zM13 3h2v10h-2z"/></svg></button></div>
+        <div class="lcdwrap">
+          <div class="lcd" id="lcd"><div class="ghost"><span>88</span><span>88:88</span></div><div class="live"><span id="trk">01</span><span class="t" id="time">0:00</span></div></div>
+          <div class="lcdlab"><span>DISC</span><span>MIN SEC</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="obj" id="cwrap">
+    <div class="caseblock">
+      <div class="case" id="case" role="button" tabindex="0" aria-label="Open or close the case">
+        <div class="tray" id="tray"><div class="inlay" id="inlay"></div><div class="recess"></div><div class="hubbase"></div><div class="glass"></div><div class="tdisc" id="tdisc"></div><div class="hub" id="hub"></div></div>
+        <div class="lidc"><div class="face front"><div class="cover" id="cover"></div><div class="shell"></div></div><div class="face back"><div class="booklet" id="inside"></div><i class="tab o t"></i><i class="tab o b"></i><i class="tab h t"></i><i class="tab h b"></i></div><div class="face lip"></div><i class="bridge"></i><i class="ls r"></i><i class="ls t"></i><i class="ls b"></i></div>
+        <div class="hinge"></div>
+      </div>
+      <div class="meta" aria-live="polite">
+        <div class="ttl" id="ttl"></div>
+        <div class="art" id="art"></div>
+      </div>
+    </div>
+  </div>
+  <svg class="hp" id="hp" aria-hidden="true"></svg>
+  <div class="obj remote" id="remote"><div class="rb"><span class="lab lo">&minus;</span><span class="lab hi">+</span><span class="lab v">VOLUME</span><input type="range" id="vol" min="0" max="20" value="12" aria-label="Volume"></div></div>
+</div></div>
+<canvas id="motes" aria-hidden="true"></canvas>
+
+<script>
+// k: file slug in records/; bg/fg: the cover's average color around the rim, and text that reads on it
+const RECORDS=[
+ {t:"Meantime",a:"Helmet",y:1992,k:"meantime",bg:"#833f4a",fg:"#fff",deezerTrackId:2445710},
+ {t:"Start a War",a:"Static-X",y:2005,k:"start-a-war",bg:"#18242c",fg:"#fff",deezerTrackId:734042},
+ {t:"Purple",a:"Stone Temple Pilots",y:1994,k:"purple",bg:"#a19f8d",fg:"#141414",deezerTrackId:3907803},
+ {t:"King for a Day… Fool for a Lifetime",a:"Faith No More",y:1995,k:"king-for-a-day-fool-for-a-lifetime",bg:"#642a2c",fg:"#fff",deezerTrackId:828879},
+ {t:"Siamese Dream",a:"The Smashing Pumpkins",y:1993,k:"siamese-dream",bg:"#cbab98",fg:"#141414",deezerTrackId:14738294},
+ {t:"Follow the Leader",a:"Korn",y:1998,k:"follow-the-leader",bg:"#7f6c4f",fg:"#fff",deezerTrackId:134523750},
+ {t:"American IV: The Man Comes Around",a:"Johnny Cash",y:2002,k:"american-iv-the-man-comes-around",bg:"#3d3b3a",fg:"#fff",deezerTrackId:128846783},
+ {t:"Jar of Flies",a:"Alice in Chains",y:1994,k:"jar-of-flies",bg:"#902b23",fg:"#fff",deezerTrackId:1038556},
+ {t:"Temple of the Dog",a:"Temple of the Dog",y:1991,k:"temple-of-the-dog",bg:"#393643",fg:"#fff",deezerTrackId:1762614667},
+ {t:"Razorblade Suitcase",a:"Bush",y:1996,k:"razorblade-suitcase",bg:"#c09e95",fg:"#141414",deezerTrackId:361116021},
+ {t:"Disclaimer II",a:"Seether",y:2004,k:"disclaimer-ii",bg:"#71474e",fg:"#fff",deezerTrackId:80276126},
+ {t:"Audioslave",a:"Audioslave",y:2002,k:"audioslave",bg:"#85909a",fg:"#fff",deezerTrackId:851057},
+ {t:"Badmotorfinger",a:"Soundgarden",y:1991,k:"badmotorfinger",bg:"#74553f",fg:"#fff",deezerTrackId:136340400},
+ {t:"System of a Down",a:"System of a Down",y:1998,k:"system-of-a-down",bg:"#33322c",fg:"#fff",deezerTrackId:70996746},
+ {t:"Vheissu",a:"Thrice",y:2005,k:"vheissu",bg:"#59674c",fg:"#fff",deezerTrackId:619791772},
+ {t:"Third Eye Blind",a:"Third Eye Blind",y:1997,k:"third-eye-blind",bg:"#9f352a",fg:"#fff",deezerTrackId:685709},
+ {t:"Freak Show",a:"Silverchair",y:1996,k:"freak-show",bg:"#754d31",fg:"#fff",deezerTrackId:1037169},
+ {t:"Sweet Oblivion",a:"Screaming Trees",y:1992,k:"sweet-oblivion",bg:"#7f7745",fg:"#fff",deezerTrackId:13177932},
+ {t:"Tales from the Punchbowl",a:"Primus",y:1995,k:"tales-from-the-punchbowl",bg:"#8a7b4b",fg:"#fff",deezerTrackId:1579661},
+ {t:"In Utero",a:"Nirvana",y:1993,k:"in-utero",bg:"#ebe0b0",fg:"#141414",deezerTrackId:70466227},
+ {t:"As Good as Dead",a:"Local H",y:1996,k:"as-good-as-dead",bg:"#7b4e32",fg:"#fff",deezerTrackId:2177711},
+ {t:"Lost and Found",a:"Mudvayne",y:2005,k:"lost-and-found",bg:"#6e654f",fg:"#fff",deezerTrackId:556809},
+ {t:"Chocolate Starfish and the Hot Dog Flavored Water",a:"Limp Bizkit",y:2000,k:"chocolate-starfish-and-the-hot-dog-flavored-water",bg:"#47423f",fg:"#fff",deezerTrackId:104011168},
+ {t:"13 Ways to Bleed on Stage",a:"Cold",y:2000,k:"13-ways-to-bleed-on-stage",bg:"#534e51",fg:"#fff",deezerTrackId:1126509},
+ {t:"Weathered",a:"Creed",y:2001,k:"weathered",bg:"#61503b",fg:"#fff",deezerTrackId:80274650}
+];
+const R=RECORDS.slice().sort(()=>Math.random()-.5);
+const $=id=>document.getElementById(id);
+const player=$('player'),disc=$('disc');
+let i=0,hist=[0],st='paused',angle=0,vel=0,spin=false,note='';
+
+// records/<k>-cover.jpg, -disc.jpg, -back.jpg, -tray.jpg; all but the cover are optional (disc falls back to the cover, back to drawn liner notes, tray to black plastic)
+const IMG={};
+function probe(src){return new Promise(ok=>{const im=new Image();im.onload=()=>Promise.resolve(im.decode&&im.decode()).catch(()=>{}).then(()=>ok(src));im.onerror=()=>ok(null);im.src=src})}
+function load(r){
+ return IMG[r.k]||(IMG[r.k]=Promise.all(['cover','disc','back','tray'].map(n=>probe(`records/${r.k}-${n}.jpg`))).then(([c,d,b,t])=>{r.cover=c;r.disc=d;r.back=b;r.tray=t}));
+}
+const img=(src,s)=>src?`<image href="${src}" width="${s}" height="${s}" preserveAspectRatio="xMidYMid slice"/>`:'';
+function coverSVG(r){
+ return `<svg viewBox="0 0 250 250" role="img" aria-label="Cover of ${r.t}"><rect width="250" height="250" fill="${r.bg}"/>${img(r.cover,250)}</svg>`;
+}
+function setTray(r){
+ $('tray').classList.toggle('clear',!!r.tray);$('case').classList.toggle('clear',!!r.tray);$('inlay').style.backgroundImage=r.tray?`url("${r.tray}")`:'';
+}
+function insideHTML(r){
+ if(r.back)return `<img src="${r.back}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">`;
+ let lines='';for(let k=0;k<9;k++)lines+=`<div style="display:flex;gap:10px;align-items:center"><span style="font:11px var(--f-lcd);color:#777;width:18px">${String(k+1).padStart(2,'0')}</span><span style="height:6px;border-radius:3px;background:#cfcfcb;width:${40+((k*37)%45)}%"></span></div>`;
+ return `<div style="position:absolute;inset:0;padding:28px 30px;display:flex;flex-direction:column;gap:12px;color:#1e2124"><div style="height:8px;width:56px;background:${r.bg}"></div><div style="font:italic 700 26px/1.1 var(--f-display)">${r.t}</div><div style="font-size:13px;color:#555">${r.a} · ${r.y}</div><div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">${lines}</div><div style="margin-top:auto;font:10px/1.4 var(--f-lcd);color:#888">Placeholder liner notes</div></div>`;
+}
+// title around the rim, only on discs printed from the cover; long titles shrink to fit the 128-radius circle
+function rimText(r,p){
+ const s=(r.t+' · '+r.a+' · '+r.y).toUpperCase(),k=Math.min(1,56/s.length);
+ return `<text font-family="Familjen Grotesk,sans-serif" font-size="${13*k}" font-weight="600" letter-spacing="${3*k}" fill="${r.fg}" stroke="${r.bg}" stroke-width="3" stroke-linejoin="round" paint-order="stroke"><textPath href="#${p}arc">${s}</textPath></text>`;
+}
+function discSVG(r,p='p'){
+ return `<svg viewBox="0 0 340 340" aria-hidden="true"><defs><clipPath id="${p}dc"><circle cx="170" cy="170" r="166"/></clipPath><path id="${p}arc" d="M170 170 m-128 0 a128 128 0 1 1 256 0 a128 128 0 1 1 -256 0"/><mask id="${p}m"><rect width="340" height="340" fill="#fff"/><circle cx="170" cy="170" r="47" fill="#000"/></mask></defs><g mask="url(#${p}m)">
+ <circle cx="170" cy="170" r="170" fill="#c9ced3"/>
+ <g clip-path="url(#${p}dc)"><rect width="340" height="340" fill="${r.bg}"/>${img(r.disc||r.cover,340)}</g>
+ ${r.disc?'':rimText(r,p)}
+ <circle cx="170" cy="170" r="62" fill="#d3d8dd"/>
+ <circle cx="170" cy="170" r="62" fill="none" stroke="#9ea5ac" stroke-width="1"/>
+ <circle cx="170" cy="170" r="53" fill="none" stroke="#b1b8bf" stroke-width="3"/>
+ <circle cx="170" cy="170" r="166" fill="none" stroke="#e8ebee" stroke-width="5" opacity=".8"/></g>
+ <path d="M123 170a47 47 0 1 0 94 0a47 47 0 1 0 -94 0zM149 170a21 21 0 1 0 42 0a21 21 0 1 0 -42 0z" fill-rule="evenodd" fill="rgba(225,231,237,.2)"/>
+ <circle cx="170" cy="170" r="36" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="1.5"/>
+ <circle cx="170" cy="170" r="47" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1"/>
+ <circle cx="170" cy="170" r="21" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.2"/></svg>`;
+}
+(()=>{let p='<circle class="hr" cx="30" cy="30" r="28.5" fill="none" stroke="#0b0c0e" stroke-width="2"/>';for(let k=0;k<12;k++)p+=`<rect class="ht" x="27.6" y="3" width="4.8" height="15" rx="2.4" fill="#d7dbdf" stroke="rgba(0,0,0,.25)" stroke-width=".5" transform="rotate(${k*30} 30 30)"/>`;p+='<circle class="hc" cx="30" cy="30" r="9" fill="#e4e7ea" stroke="rgba(0,0,0,.3)" stroke-width=".6"/><circle cx="30" cy="30" r="5" fill="none" stroke="rgba(0,0,0,.12)" stroke-width="1"/>';document.getElementById('hub').innerHTML=`<svg viewBox="0 0 60 60" aria-hidden="true">${p}</svg>`})();
+function render(){
+ const r=R[i];
+ $('cover').innerHTML=coverSVG(r);disc.innerHTML=discSVG(r);$('inside').innerHTML=insideHTML(r);setTray(r);
+ $('ttl').textContent=r.t;$('art').textContent=r.a;
+}
+// the clock reads the audio; a note ('READ', 'Err', or 'VOL' while the volume shows) holds the time field
+function fmt(){if(note||(st!='playing'&&st!='paused'))return;const s=Math.floor(au.currentTime||0);$('time').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+function lcdText(trk,t){$('trk').textContent=trk;$('time').textContent=t}
+function show(){
+ if(st=='open')lcdText('--',' OPEN');
+ else if(st!='swapping'&&note!='VOL'){$('trk').textContent=String(i+1).padStart(2,'0');if(note)$('time').textContent=note;else fmt()}
+}
+function say(n){note=n;show()}
+
+let ctx,vol=12;
+function sfx(type){
+ if(!vol)return;
+ try{
+  ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();
+  const n=ctx.currentTime,len=type=='snap'?.06:.025;
+  const buf=ctx.createBuffer(1,ctx.sampleRate*len,ctx.sampleRate),d=buf.getChannelData(0);
+  for(let k=0;k<d.length;k++)d[k]=(Math.random()*2-1)*Math.pow(1-k/d.length,type=='snap'?3:6);
+  const s=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain();
+  f.type='bandpass';f.frequency.value=type=='snap'?1800:3200;g.gain.value=(type=='snap'?.5:.3)*Math.pow(vol/12,2);
+  s.buffer=buf;s.connect(f).connect(g).connect(ctx.destination);s.start(n);
+ }catch(e){}
+}
+
+function setSt(s){
+ st=s;
+ player.classList.toggle('open',s=='open');
+ $('lid').tabIndex=s=='open'?0:-1;
+ $('lcd').classList.toggle('blink',s=='paused');
+ if(note=='VOL'||(note=='READ'&&s!='playing'))note='';
+ show();
+ if(s=='playing')go();else{stop();if(s=='open')au.currentTime=0}
+}
+function loop(){
+ const target=spin?360/0.85:0;
+ vel+=(target-vel)*(spin?0.025:0.03);
+ angle=(angle+vel/60)%360;
+ disc.style.rotate=angle+'deg';
+ requestAnimationFrame(loop);
+}
+
+// Audio: Deezer 30 s previews via /api/track/:id. Preview URLs are signed and expire ~15 min after they're issued,
+// so they're fetched fresh and refetched once if loading fails.
+// Two elements trade places: `au` plays the current disc; `pre` preloads the next one in the shuffle once playback starts.
+const ON_PREVIEW_END='stop'; // 'stop': park at 0:00 with the time blinking · 'next': swap to the next disc
+const API='/api/track/';
+const SILENT='data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQIAAACAgA==';
+let au=new Audio(),pre=new Audio(),readT,unlocked=false;
+au.preload=pre.preload='auto';
+
+// deezerTrackId → track info from the proxy; kept 10 min, or refetched when asked for fresh
+const INFO={};
+function info(id,fresh){
+ if(!id)return Promise.reject('no deezerTrackId');
+ const c=INFO[id];
+ if(fresh||!c||Date.now()-c.at>6e5){
+  const p=fetch(API+id,{cache:fresh?'no-cache':'default'}).then(r=>r.ok?r.json():Promise.reject(r.status));
+  INFO[id]={at:Date.now(),p};p.catch(()=>{if(INFO[id]&&INFO[id].p==p)delete INFO[id]});
+ }
+ return INFO[id].p;
+}
+// point an element at a track; a result that lands after the element moved on to another track is dropped
+function arm(el,id,fresh){
+ el.dz=id;el.armed=false;
+ el.ready=info(id,fresh).then(d=>{if(el.dz!==id)throw 'stale';el.src=d.preview;el.armed=true});
+ el.ready.catch(()=>{});
+ return el.ready;
+}
+function level(){au.volume=pre.volume=Math.pow(vol/20,2)}
+function stop(){au.pause();spin=false;clearTimeout(readT)}
+function readSoon(){clearTimeout(readT);readT=setTimeout(()=>{if(st=='playing'&&!spin)say('READ')},400)}
+// browsers only start audio from a click; the first click primes both elements so later play() calls
+// (end of a swap, after a refetch) are allowed too, including on iOS
+function unlock(){
+ if(unlocked)return;unlocked=true;
+ for(const el of [au,pre]){if(!el.armed)el.src=SILENT;el.play().catch(()=>{});el.pause()}
+}
+// make R[n] the current disc's audio, reusing the preloaded element when it holds that track
+function cue(n){
+ const id=R[n].deezerTrackId;
+ stop();note='';
+ if(pre.dz==id&&!pre.error)[au,pre]=[pre,au];
+ else if(au.dz!=id||au.error)arm(au,id);
+ au.tries=0;au.currentTime=0;
+}
+function go(){
+ const el=au,id=el.dz;
+ if(note=='Err'){note='';show();el.tries=0;arm(el,id,true)}
+ readSoon();
+ if(!el.armed)return el.ready.then(()=>{if(el==au&&el.dz==id&&st=='playing')go()},()=>{if(el==au&&el.dz==id&&st=='playing')retry()});
+ el.play().catch(e=>{
+  if(el!=au||e.name=='AbortError')return;
+  if(e.name=='NotAllowedError')setSt('paused');else retry();
+ });
+}
+// one fresh fetch per cue in case the preview URL expired; if that fails too, show Err and stay paused.
+// A bad URL both fires `error` and rejects play(): whichever comes second finds the refetch in flight (not armed) and stops
+function retry(){
+ const el=au,id=el.dz,t=el.currentTime;
+ if(!el.armed&&el.tries)return;
+ if(el.tries++)return fail();
+ arm(el,id,true).then(()=>{if(el!=au||el.dz!=id)return;if(t)el.currentTime=t;if(st=='playing')go()},()=>{if(el==au&&el.dz==id)fail()});
+}
+function fail(){note='Err';if(st=='playing')setSt('paused');else show()}
+function preloadNext(){const id=R[(i+1)%R.length].deezerTrackId;if(pre.dz!=id||pre.error)arm(pre,id)}
+
+// audio events drive the disc and the LCD; events from the element that isn't current are ignored
+function on(type,fn){for(const el of [au,pre])el.addEventListener(type,e=>{if(e.target==au&&au.armed)fn()})}
+on('playing',()=>{spin=true;clearTimeout(readT);au.tries=0;if(note=='READ')note='';show();preloadNext()});
+on('pause',()=>{spin=false;clearTimeout(readT)});
+const starve=()=>{if(au.paused||au.readyState>2)return;spin=false;readSoon()};
+on('waiting',starve);on('stalled',starve);
+on('timeupdate',fmt);
+on('ended',()=>{spin=false;if(ON_PREVIEW_END=='next'&&st=='playing')return advance();au.currentTime=0;setSt('paused')});
+on('error',()=>retry());
+addEventListener('pagehide',()=>{stop();pre.pause()});
+addEventListener('pageshow',e=>{if(e.persisted&&st=='playing')setSt('paused')});
+
+function swap(ni){
+ if(st=='swapping')return;
+ st='swapping';cue(ni);load(R[ni]).then(()=>swapIn(ni));
+}
+function swapIn(ni){
+ const c=$('case'),td=$('tdisc');
+ td.innerHTML=discSVG(R[ni],'t');td.className='tdisc in';$('inside').innerHTML=insideHTML(R[ni]);setTray(R[ni]);
+ c.classList.add('open');player.classList.add('open');$('lcd').classList.remove('blink');lcdText('--','--:--');sfx('snap');
+ setTimeout(()=>{disc.classList.add('lift')},230);
+ setTimeout(()=>{td.classList.add('lift')},300);
+ setTimeout(()=>{i=ni;render();disc.classList.remove('lift');disc.classList.add('drop');requestAnimationFrame(()=>requestAnimationFrame(()=>disc.classList.remove('drop')))},460);
+ setTimeout(()=>{c.classList.remove('open');td.className='tdisc'},600);
+ setTimeout(()=>{player.classList.remove('open');sfx('snap')},680);
+ setTimeout(()=>{lcdText(String(i+1).padStart(2,'0'),'READ')},780);
+ setTimeout(()=>{note='READ';setSt('playing')},1150);
+}
+$('case').onclick=()=>{if(st=='swapping')return;sfx('click');$('case').classList.toggle('open')};
+$('case').onkeydown=e=>{if(e.key=='Enter'||e.key==' '){e.preventDefault();$('case').click()}};
+$('latch').onclick=()=>{if(st=='swapping'||st=='open')return;sfx('snap');setSt('open')};
+$('lid').onclick=()=>{if(st=='open'){unlock();sfx('snap');setSt('playing')}};
+$('dz').onclick=e=>e.stopPropagation();
+$('lid').onkeydown=e=>{if((e.key=='Enter'||e.key==' ')&&st=='open'){e.preventDefault();$('lid').click()}};
+$('play').onclick=()=>{unlock();sfx('click');
+ if(st=='playing')setSt('paused');
+ else if(st=='paused')setSt('playing');
+ else if(st=='open'){player.classList.remove('shake');void player.offsetWidth;player.classList.add('shake')}};
+function advance(){const n=(i+1)%R.length;hist.push(n);swap(n)}
+$('next').onclick=()=>{unlock();sfx('click');if(st=='swapping')return;advance()};
+$('back').onclick=()=>{unlock();sfx('click');if(st=='swapping')return;
+ if(au.currentTime>3&&st!='open'){au.currentTime=0;fmt();return}
+ if(hist.length>1){hist.pop();swap(hist[hist.length-1])}else{au.currentTime=0;fmt()}};
+
+let volT;
+$('vol').oninput=e=>{
+ vol=+e.target.value;level();sfx('click');
+ if(st=='swapping')return;
+ note='VOL';lcdText('VOL',String(vol).padStart(2,'0'));clearTimeout(volT);
+ volT=setTimeout(()=>{if(note=='VOL')note='';show()},1200);
+};
+
+// earbuds: head position + rotation (stem points along local +y), cord waypoints from plug to splitter, branch waypoints
+const LAYOUTS={
+ wide:{w:1000,h:780,player:[78,10,0],cse:[586,40,3],
+  hp:{cord:[[52,410],[38,490],[60,575]],rem:[150,630,32],split:[236,684],
+   A:{x:722,y:606,r:35,via:[[330,722],[470,720],[580,700],[636,690]]},B:{x:852,y:652,r:40,via:[[316,738],[460,748],[610,756],[738,752]]}}},
+ tall:{w:520,h:1340,player:[62,16,0],cse:[63,830,-2],
+  hp:{cord:[[36,420]],rem:[30,520,88],split:[46,622],
+   A:{x:330,y:640,r:35,via:[[96,690],[190,718]]},B:{x:452,y:702,r:40,via:[[86,712],[190,772],[320,800]]}}}
+};
+
+const add=(a,b,k=1)=>[a[0]+b[0]*k,a[1]+b[1]*k],sub=(a,b)=>[a[0]-b[0],a[1]-b[1]];
+const unit=v=>{const l=Math.hypot(...v)||1;return[v[0]/l,v[1]/l]};
+const f1=n=>n.toFixed(1);
+// Catmull-Rom through pts, leaving along d0 and arriving along d1
+function spline(pts,d0,d1){
+ const n=pts.length,P=[add(pts[0],d0,-Math.hypot(...sub(pts[1],pts[0]))),...pts,add(pts[n-1],d1,Math.hypot(...sub(pts[n-1],pts[n-2])))];
+ let s=`M${pts[0].map(f1)}`;
+ for(let k=1;k<P.length-2;k++){
+  const c1=add(P[k],sub(P[k+1],P[k-1]),1/6),c2=add(P[k+1],sub(P[k+2],P[k]),-1/6);
+  s+=`C${c1.map(f1)} ${c2.map(f1)} ${P[k+1].map(f1)}`;
+ }
+ return s;
+}
+function cordSVG(d){
+ return `<path d="${d}" fill="none" stroke="#020203" stroke-width="5.2" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#18191c" stroke-width="3.6" stroke-linecap="round"/><path d="${d}" fill="none" stroke="rgba(255,236,214,.3)" stroke-width=".9" stroke-linecap="round" transform="translate(-.7 -.9)"/>`;
+}
+const STEM=80;
+function budSVG(b,id,back){
+ const r=b.r,gt=`gradientTransform="rotate(${-r} .5 .5)"`;
+ const defs=`<radialGradient id="${id}rim" cx=".38" cy=".32" r=".75" ${gt}><stop offset="0" stop-color="#55585e"/><stop offset=".45" stop-color="#1c1d20"/><stop offset="1" stop-color="#050506"/></radialGradient>
+  <radialGradient id="${id}face" cx=".4" cy=".35" r=".7" ${gt}><stop offset="0" stop-color="#2a2b2f"/><stop offset="1" stop-color="#08080a"/></radialGradient>
+  <linearGradient id="${id}cap" x1="0" y1="0" x2="1" y2="1" ${gt}><stop offset="0" stop-color="#fbf7f1"/><stop offset=".2" stop-color="#c9ccd0"/><stop offset=".4" stop-color="#6b7077"/><stop offset=".53" stop-color="#eceef0"/><stop offset=".7" stop-color="#a4a9ae"/><stop offset=".88" stop-color="#474c52"/><stop offset="1" stop-color="#868b91"/></linearGradient>`;
+ const stem=`<path d="M-7.2 9L7.2 9L5.4 ${STEM-17}Q0 ${STEM-14.5} -5.4 ${STEM-17}Z" fill="url(#${back?'hpChrome':'hpTube'})"/>
+  ${back?'':`<rect x="-6.9" y="19" width="13.8" height="7" fill="url(#hpChrome)"/>`}
+  <path d="M-4.6 ${STEM-17}L4.6 ${STEM-17}L3 ${STEM}L-3 ${STEM}Z" fill="url(#hpTube)"/>
+  ${[4,8,12].map(k=>`<line x1="-4" x2="4" y1="${STEM-17+k}" y2="${STEM-17+k}" stroke="rgba(255,255,255,.08)" stroke-width=".8"/>`).join('')}`;
+ const head=back
+  ?`<ellipse rx="23" ry="21.2" fill="url(#${id}cap)"/>
+   <ellipse rx="23" ry="21.2" fill="url(#hpCurve)"/>
+   <ellipse rx="22.3" ry="20.5" fill="none" stroke="rgba(255,255,255,.55)" stroke-width=".6"/>
+   <rect x="-4" y="14.5" width="8" height="1.8" rx=".9" fill="#1a1b1e"/>
+   <text y="2.6" text-anchor="middle" font-family="Familjen Grotesk,sans-serif" font-size="7.5" font-weight="600" letter-spacing=".5" fill="rgba(40,44,50,.5)">L</text>`
+  :`<ellipse rx="22.6" ry="20.8" fill="url(#${id}face)"/>
+   <ellipse rx="22.6" ry="20.8" fill="none" stroke="#000" stroke-width="1.4"/>
+   <ellipse rx="16" ry="14.6" fill="none" stroke="#2e3034" stroke-width="2"/>
+   <ellipse rx="14.8" ry="13.5" fill="none" stroke="#060607" stroke-width=".8"/>
+   <ellipse rx="11" ry="10" fill="url(#hpMesh)"/>
+   <circle r="2.8" fill="#0a0a0b" stroke="#36383c" stroke-width=".6"/>
+   <text y="-15.6" text-anchor="middle" font-family="Familjen Grotesk,sans-serif" font-size="4" font-weight="600" fill="#55585d">R</text>`;
+ const dir=[-Math.sin(r*Math.PI/180),Math.cos(r*Math.PI/180)];
+ b.end=add([b.x,b.y],dir,STEM);b.dir=dir;
+ return {defs,svg:`<g filter="url(#hpShB)" transform="translate(${b.x} ${b.y})"><g transform="rotate(${r})">${stem}
+  <ellipse cy="3.6" rx="26.6" ry="25" fill="#030304"/><ellipse rx="26.6" ry="24.6" fill="url(#${id}rim)"/>${head}</g>
+  <ellipse cx="-10" cy="-12" rx="9" ry="3.6" transform="rotate(-38 -10 -12)" fill="#fff" opacity="${back?.6:.2}" filter="url(#hpBlur)"/>
+  <path d="M-24 -4A25 24 0 0 1 -6 -23.4" fill="none" stroke="rgba(255,240,220,.35)" stroke-width="1" stroke-linecap="round"/></g>`};
+}
+// right-angle plug: nozzle flush with the player's side wall (clipped there, incl. shadow), cable leaves downward through a ribbed relief
+const PLUG_OUT=[-25,46];
+function plugSVG(x,y){
+ const ribs=Array.from({length:8},(_,k)=>{const w=13.5-k*.75,yy=13+k*3.9;return `<rect x="${-25-w/2}" y="${yy}" width="${w}" height="2.6" rx="1.3" fill="url(#hpTube)"/>`}).join('');
+ const dots=Array.from({length:12},(_,k)=>`<circle cx="${-13+(k%4)*2.6}" cy="${-3.9+Math.floor(k/4)*2.6}" r=".7" fill="rgba(255,255,255,.1)"/>`).join('');
+ return `<clipPath id="hpPlugClip"><rect x="${x-200}" y="${y-100}" width="200" height="200"/></clipPath><g clip-path="url(#hpPlugClip)"><g filter="url(#hpShB)" transform="translate(${x} ${y})">
+  <path d="M-29.6 10L-20.4 10L-21.6 45L-28.4 45Z" fill="url(#hpTube)"/>${ribs}
+  <rect x="-20" y="-7" width="20" height="14" rx="2" fill="url(#hpTubeV)"/>${dots}
+  <rect x="-18.5" y="-5.6" width="17" height="1.2" rx=".6" fill="rgba(255,240,220,.28)"/>
+  <path d="M-30 -9.5H-22Q-17 -9.5 -17 -4.5V9Q-17 14 -22 14H-28Q-36 14 -36 6V-3.5Q-36 -9.5 -30 -9.5Z" fill="url(#hpTube)"/>
+  <path d="M-30.5 -8.2H-22.5Q-19 -8.2 -18.6 -5" fill="none" stroke="rgba(255,240,220,.3)" stroke-width="1.1" stroke-linecap="round"/></g></g>`;
+}
+let hpKey='';
+function drawHP(key,c){
+ if(hpKey==key)return;hpKey=key;
+ const h=c.hp,j=[c.player[0],c.player[1]+300];
+ const plugEnd=add(j,PLUG_OUT);
+ const A=budSVG(h.A,'hpa',false),B=budSVG(h.B,'hpb',true);
+ // the cord runs into either end of the volume remote
+ const rd=[Math.cos(h.rem[2]*Math.PI/180),Math.sin(h.rem[2]*Math.PI/180)],rIn=add(h.rem,rd,-50),rOut=add(h.rem,rd,50);
+ const md=unit(sub(h.split,rOut));
+ const main=spline([plugEnd,...h.cord,rIn],[0,1],rd)+spline([rOut,h.split],rd,md);
+ const bA=spline([h.split,...h.A.via,h.A.end],md,h.A.dir.map(v=>-v));
+ const bB=spline([h.split,...h.B.via,h.B.end],md,h.B.dir.map(v=>-v));
+ const ang=Math.atan2(md[1],md[0])*180/Math.PI;
+ $('hp').setAttribute('width',c.w);$('hp').setAttribute('height',c.h);
+ $('hp').innerHTML=`<defs>
+  <filter id="hpSh" x="-10%" y="-10%" width="130%" height="130%"><feGaussianBlur in="SourceAlpha" stdDeviation="1" result="a"/><feOffset dx="1.2" dy="2" result="a"/><feGaussianBlur in="SourceAlpha" stdDeviation="3.5" result="b"/><feOffset in="b" dx="4" dy="7" result="b"/><feComponentTransfer in="b" result="b"><feFuncA type="linear" slope=".5"/></feComponentTransfer><feComponentTransfer in="a" result="a"><feFuncA type="linear" slope=".7"/></feComponentTransfer><feMerge><feMergeNode in="b"/><feMergeNode in="a"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="hpShB" x="-60%" y="-150%" width="260%" height="400%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.5" result="a"/><feOffset dx="2" dy="3" result="a"/><feGaussianBlur in="SourceAlpha" stdDeviation="6" result="b"/><feOffset in="b" dx="7" dy="12" result="b"/><feComponentTransfer in="b" result="b"><feFuncA type="linear" slope=".55"/></feComponentTransfer><feComponentTransfer in="a" result="a"><feFuncA type="linear" slope=".75"/></feComponentTransfer><feMerge><feMergeNode in="b"/><feMergeNode in="a"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="hpBlur"><feGaussianBlur stdDeviation="1.6"/></filter>
+  <linearGradient id="hpTube" x1="0" x2="1"><stop offset="0" stop-color="#050506"/><stop offset=".3" stop-color="#3d3f44"/><stop offset=".55" stop-color="#141518"/><stop offset="1" stop-color="#000"/></linearGradient>
+  <linearGradient id="hpTubeV" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#202124"/><stop offset=".22" stop-color="#46484d"/><stop offset=".5" stop-color="#141518"/><stop offset="1" stop-color="#000"/></linearGradient>
+  <linearGradient id="hpChrome" x1="0" x2="1"><stop offset="0" stop-color="#55595f"/><stop offset=".25" stop-color="#f4f1ec"/><stop offset=".45" stop-color="#a7acb1"/><stop offset=".7" stop-color="#dfe2e5"/><stop offset="1" stop-color="#3f4348"/></linearGradient>
+  <linearGradient id="hpChromeV" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#8e9399"/><stop offset=".25" stop-color="#fbf8f3"/><stop offset=".5" stop-color="#a3a8ad"/><stop offset=".75" stop-color="#d5d8db"/><stop offset="1" stop-color="#3b3f44"/></linearGradient>
+  <linearGradient id="hpGold" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#8a6420"/><stop offset=".3" stop-color="#f6dc8e"/><stop offset=".6" stop-color="#b8892e"/><stop offset="1" stop-color="#5e4212"/></linearGradient>
+  <radialGradient id="hpCurve" cx=".5" cy=".5" r=".5"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".4"/></radialGradient>
+  <pattern id="hpMesh" width="2.2" height="2.2" patternUnits="userSpaceOnUse"><rect width="2.2" height="2.2" fill="#0c0c0e"/><circle cx="1.1" cy="1.1" r=".6" fill="#34363b"/></pattern>
+  ${A.defs}${B.defs}</defs>
+  <g filter="url(#hpSh)">${cordSVG(main)}${cordSVG(bA)}${cordSVG(bB)}</g>
+  <g filter="url(#hpShB)" transform="translate(${h.split}) rotate(${ang})"><rect x="-9" y="-4.4" width="18" height="8.8" rx="3.6" fill="url(#hpTubeV)"/><rect x="-7" y="-3.2" width="14" height="1.1" rx=".55" fill="rgba(255,240,220,.3)"/></g>
+  ${A.svg}${B.svg}${plugSVG(...j)}`;
+ const rm=$('remote'),ra=h.rem[2]*Math.PI/180;
+ place(rm,h.rem[0]-46,h.rem[1]-15,h.rem[2]);
+ // keep the shadow falling down-right on the desk whatever the remote's angle
+ rm.style.setProperty('--sx',f1(4*Math.cos(ra)+7*Math.sin(ra))+'px');rm.style.setProperty('--sy',f1(7*Math.cos(ra)-4*Math.sin(ra))+'px');
+}
+function place(el,x,y,r){el.style.left=x+'px';el.style.top=y+'px';el.style.transform=r?`rotate(${r}deg)`:''}
+function layout(){
+ const avail=document.documentElement.clientWidth-32,vh=window.innerHeight;
+ const wide=avail>=900&&avail/vh>=1.05;
+ const c=wide?LAYOUTS.wide:LAYOUTS.tall;
+ // desktop: objects span ~85% of the viewport width (80% at 2560+), limited by what fits vertically
+ const tw=Math.min(avail,Math.max((innerWidth>=2560?.8:.85)*innerWidth,1.1*c.w));
+ const s=wide?Math.min(tw/c.w,Math.max((vh-64)/c.h,.62)):Math.min(1.25,avail/c.w);
+ place($('pwrap'),...c.player);place($('cwrap'),...c.cse);drawHP(wide?'wide':'tall',c);
+ const sc=$('scene');sc.style.width=c.w+'px';sc.style.height=c.h+'px';sc.style.transform=`scale(${s})`;
+ const wr=$('wrap');wr.style.width=c.w*s+'px';wr.style.height=c.h*s+'px';
+}
+addEventListener('resize',layout);layout();
+
+(()=>{
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const cv=$('motes'),g=cv.getContext('2d');let W,H,dpr;
+ function size(){dpr=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;g.setTransform(dpr,0,0,dpr,0,0)}
+ size();addEventListener('resize',size);
+ const M=Array.from({length:34},()=>({x:Math.random(),y:Math.random()*.7,r:.6+Math.random()*1.6,vx:(Math.random()-.5)*.00012,vy:-.00004-Math.random()*.00008,p:Math.random()*6.28}));
+ (function tick(t){
+  g.clearRect(0,0,W,H);
+  for(const m of M){
+   m.x+=m.vx+Math.sin(t/4000+m.p)*.00006;m.y+=m.vy;if(m.y<-.02){m.y=.7;m.x=Math.random()}
+   const dx=m.x-.28,dy=m.y-.14,light=Math.max(0,1-Math.sqrt(dx*dx*1.6+dy*dy*2.2));
+   const a=light*(.35+.35*Math.sin(t/900+m.p));if(a<=.01)continue;
+   g.fillStyle=`rgba(255,214,160,${a.toFixed(3)})`;g.beginPath();g.arc(m.x*W,m.y*H,m.r,0,6.283);g.fill();
+  }
+  requestAnimationFrame(tick);
+ })(0);
+})();
+cue(0);level();render();setSt('paused');loop();
+// first disc, then its neighbours, then the rest one at a time
+load(R[0]).then(()=>{if(i==0&&st!='swapping')render()});
+[R[1],R[R.length-1],...R.slice(2,-1)].reduce((q,r)=>q.then(()=>load(r)),load(R[0]));
+</script>
+
+</body></html>

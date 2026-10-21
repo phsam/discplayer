@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Record Images</title>
+<style>
+:root{--bg:#f4f2ee;--card:#fff;--ink:#1c1b19;--mute:#76716a;--line:#e3dfd8;--slot:#ece8e1;--accent:#2f6fde;--ok:#2f8a57;--bad:#c8473f;color-scheme:light dark}
+@media (prefers-color-scheme:dark){:root{--bg:#161514;--card:#201f1d;--ink:#eeebe6;--mute:#9a958d;--line:#33312e;--slot:#2a2826;--accent:#6c9cf0;--ok:#55b07c;--bad:#e06a62}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;padding:14px 20px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+h1{font-size:17px;margin:0;margin-right:auto}
+header a{color:var(--accent)}
+input[type=search]{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--ink);width:200px}
+label.chk{display:flex;gap:6px;align-items:center;color:var(--mute);cursor:pointer}
+main{padding:20px;display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(440px,1fr))}
+@media (max-width:520px){main{grid-template-columns:1fr;padding:16px}header{padding:12px 16px}}
+.rec{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.rec h2{font-size:15px;margin:0}
+.rec p{margin:2px 0 12px;color:var(--mute);font-size:13px}
+.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.slot{display:flex;flex-direction:column;gap:5px;min-width:0}
+.box{position:relative;aspect-ratio:1;border-radius:6px;background:var(--slot);overflow:hidden;cursor:pointer;outline:2px dashed transparent;outline-offset:-2px;transition:outline-color .15s}
+.box:hover,.box.over{outline-color:var(--accent)}
+.box img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.box.disc img.art{-webkit-mask:radial-gradient(closest-side,transparent 27.75%,#000 27.9%,#000 97.5%,transparent 97.7%);mask:radial-gradient(closest-side,transparent 27.75%,#000 27.9%,#000 97.5%,transparent 97.7%)}
+.box img.guide{display:none;opacity:.9}
+body.guides .box.disc.has img.guide{display:block}
+.box .empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--mute);font-size:12px;padding:6px}
+.box .busy{position:absolute;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--card) 70%,transparent);font-size:12px}
+.meta{display:flex;justify-content:space-between;align-items:baseline;gap:4px;font-size:12px}
+.meta b{font-weight:600}
+.meta .req{color:var(--bad);font-weight:500}
+.meta button{font:inherit;font-size:12px;border:0;background:none;color:var(--bad);cursor:pointer;padding:0}
+.note{font-size:11px;color:var(--mute);min-height:1em;overflow-wrap:anywhere}
+.note.err{color:var(--bad)}
+.note.ok{color:var(--ok)}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header>
+  <h1>Record images</h1>
+  <input type="search" id="q" placeholder="Filter records" aria-label="Filter records">
+  <label class="chk"><input type="checkbox" id="missing"> Missing only</label>
+  <label class="chk"><input type="checkbox" id="guides"> Disc guide</label>
+  <a href="/" target="_blank">Open player ↗</a>
+</header>
+<main id="list"></main>
+<input type="file" id="file" accept="image/*" hidden>
+
+<script>
+// Uploads go to records/<slug>-<kind>.jpg via the dev server (scripts/admin.mjs).
+// Images are squared, resized and compressed here to match records/IMAGE-SPECS.md: 800×800 JPEG under 200 KB.
+const SIZE=800,LIMIT=200*1024;
+const KINDS=[
+ {k:'cover',label:'Cover',hint:'Front of the booklet'},
+ {k:'disc',label:'Disc',hint:'Printed disc face'},
+ {k:'back',label:'Back',hint:'Inside of the lid'},
+ {k:'tray',label:'Tray',hint:'Art behind the tray'}
+];
+const $=id=>document.getElementById(id);
+let RECS=[],pick=null;
+
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+const kb=n=>Math.round(n/1024)+' KB';
+
+async function api(path,opt){
+ const r=await fetch('/admin/api/'+path,opt);
+ const j=await r.json().catch(()=>({}));
+ if(!r.ok)throw new Error(j.error||`HTTP ${r.status}`);
+ return j;
+}
+
+function slotHTML(r,{k,label,hint}){
+ const v=r.images[k];
+ return `<div class="slot" data-k="${r.k}" data-kind="${k}">
+  <div class="box ${k} ${v?'has':''}" tabindex="0" role="button" aria-label="${v?'Replace':'Upload'} ${label.toLowerCase()} for ${esc(r.t)}">
+   ${v?`<img class="art" src="/records/${r.k}-${k}.jpg?v=${v}" alt="">`:`<div class="empty">Drop or click<br>${hint}</div>`}
+   ${k==='disc'?'<img class="guide" src="/records/disc-template.svg" alt="">':''}
+  </div>
+  <div class="meta"><b>${label}</b>${v?(k==='cover'?'':'<button data-del>Remove</button>'):(k==='cover'?'<span class="req">required</span>':'')}</div>
+  <div class="note"></div>
+ </div>`;
+}
+
+function render(){
+ const q=$('q').value.trim().toLowerCase(),miss=$('missing').checked;
+ $('list').innerHTML=RECS.map((r,i)=>{
+  const hide=(q&&!`${r.t} ${r.a} ${r.k}`.toLowerCase().includes(q))||(miss&&KINDS.every(x=>r.images[x.k]));
+  return `<section class="rec ${hide?'hidden':''}" id="r-${r.k}">
+   <h2>${String(i+1).padStart(2,'0')} · ${esc(r.t)}</h2><p>${esc(r.a)} · ${r.y} · <code>${r.k}</code></p>
+   <div class="slots">${KINDS.map(x=>slotHTML(r,x)).join('')}</div></section>`;
+ }).join('');
+}
+
+// center-crop to a square, scale to 800, then lower JPEG quality until it fits under 200 KB
+async function prepare(file){
+ const bmp=await createImageBitmap(file);
+ const s=Math.min(bmp.width,bmp.height),notes=[];
+ if(Math.abs(bmp.width-bmp.height)>2)notes.push(`cropped ${bmp.width}×${bmp.height} to square`);
+ if(s<SIZE)notes.push(`upscaled from ${s}px`);
+ const c=document.createElement('canvas');c.width=c.height=SIZE;
+ const g=c.getContext('2d');
+ g.fillStyle='#000';g.fillRect(0,0,SIZE,SIZE);
+ g.imageSmoothingQuality='high';
+ g.drawImage(bmp,(bmp.width-s)/2,(bmp.height-s)/2,s,s,0,0,SIZE,SIZE);
+ bmp.close&&bmp.close();
+ let blob;
+ for(let q=.86;q>=.4;q-=.06){
+  blob=await new Promise(ok=>c.toBlob(ok,'image/jpeg',q));
+  if(blob.size<=LIMIT)break;
+ }
+ if(blob.size>LIMIT)notes.push('still over 200 KB');
+ return {blob,notes};
+}
+
+function note(slot,text,cls=''){const n=slot.querySelector('.note');n.textContent=text;n.className='note '+cls}
+
+async function upload(slot,file){
+ if(!file||!file.type.startsWith('image/'))return note(slot,'Not an image','err');
+ const {k,kind}=slot.dataset,box=slot.querySelector('.box');
+ box.insertAdjacentHTML('beforeend','<div class="busy">Saving…</div>');
+ try{
+  const {blob,notes}=await prepare(file);
+  const res=await api(`image/${k}/${kind}`,{method:'PUT',headers:{'content-type':'image/jpeg'},body:blob});
+  const r=RECS.find(r=>r.k===k);r.images=res.images;render();
+  note(document.querySelector(`.slot[data-k="${k}"][data-kind="${kind}"]`),`Saved ${kb(blob.size)}${notes.length?' · '+notes.join(', '):''}`,'ok');
+ }catch(e){box.querySelector('.busy')?.remove();note(slot,e.message,'err')}
+}
+
+async function remove(slot){
+ const {k,kind}=slot.dataset,r=RECS.find(r=>r.k===k);
+ if(!confirm(`Remove the ${kind} image for “${r.t}”?`))return;
+ try{r.images=(await api(`image/${k}/${kind}`,{method:'DELETE'})).images;render()}
+ catch(e){note(slot,e.message,'err')}
+}
+
+const list=$('list');
+list.addEventListener('click',e=>{
+ const slot=e.target.closest('.slot');if(!slot)return;
+ if(e.target.closest('[data-del]'))return remove(slot);
+ if(e.target.closest('.box')){pick=slot;$('file').value='';$('file').click()}
+});
+list.addEventListener('keydown',e=>{
+ if((e.key==='Enter'||e.key===' ')&&e.target.classList.contains('box')){e.preventDefault();e.target.click()}
+});
+$('file').addEventListener('change',e=>{if(pick&&e.target.files[0])upload(pick,e.target.files[0])});
+list.addEventListener('dragover',e=>{const b=e.target.closest('.box');if(!b)return;e.preventDefault();b.classList.add('over')});
+list.addEventListener('dragleave',e=>e.target.closest('.box')?.classList.remove('over'));
+list.addEventListener('drop',e=>{
+ const b=e.target.closest('.box');if(!b)return;e.preventDefault();b.classList.remove('over');
+ upload(b.closest('.slot'),e.dataTransfer.files[0]);
+});
+// stop a missed drop from navigating away to the image
+addEventListener('dragover',e=>e.preventDefault());addEventListener('drop',e=>e.preventDefault());
+
+$('q').addEventListener('input',render);
+$('missing').addEventListener('change',render);
+$('guides').addEventListener('change',e=>document.body.classList.toggle('guides',e.target.checked));
+
+api('records').then(r=>{RECS=r;render()}).catch(e=>{$('list').textContent='Could not load records: '+e.message});
+</script>
+</body>
+</html>
