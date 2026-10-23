@@ -65,8 +65,8 @@ body{color:var(--ink);font-family:var(--f-body);min-height:100vh;overflow-x:hidd
 .tongue::after{content:"";position:absolute;right:28px;top:50%;width:18px;height:18px;margin-top:-9px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#4c535b,#2f343a);box-shadow:inset 0 1px 2px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.1)}
 .tongue svg{position:absolute;left:48px;top:50%;height:27.2px;margin-top:-13.6px;fill:#d5d9dd;filter:drop-shadow(0 -1px 0 rgba(0,0,0,.4))}
 .glass{position:absolute;left:75px;top:75px;width:220px;height:220px;border-radius:50%;background:rgba(14,16,20,.5);box-shadow:inset 0 0 0 3px #2a2f35,inset 0 0 0 4px rgba(255,255,255,.12),inset 0 10px 22px rgba(0,0,0,.55);overflow:hidden}
-.glass::before{content:"";position:absolute;width:76px;height:320px;left:112px;top:-50px;transform:rotate(32deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.16) 40%,rgba(255,255,255,.05) 70%,transparent)}
-.glass::after{content:"";position:absolute;width:14px;height:320px;left:200px;top:-50px;transform:rotate(32deg);background:rgba(255,255,255,.07)}
+.lid .glass::before{content:"";position:absolute;width:76px;height:320px;left:112px;top:-50px;transform:rotate(32deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.16) 40%,rgba(255,255,255,.05) 70%,transparent)}
+.lid .glass::after{content:"";position:absolute;width:14px;height:320px;left:200px;top:-50px;transform:rotate(32deg);background:rgba(255,255,255,.07)}
 .print{position:absolute;left:0;right:0;text-align:center;color:#d5d9dd;pointer-events:none}
 .print.model{top:24px}
 .print.model svg{display:block;margin:0 auto;height:14px;fill:currentColor;filter:drop-shadow(0 -1px 0 rgba(0,0,0,.4))}
@@ -157,14 +157,14 @@ body{color:var(--ink);font-family:var(--f-body);min-height:100vh;overflow-x:hidd
 .case .cover{position:absolute;left:3px;top:3px;width:348px;height:348px}
 /* the booklet's folded spine, seen through the lid along the hinge */
 .case .cover::after{content:"";position:absolute;z-index:1;pointer-events:none}
-.case .cover::after{inset:0;background:linear-gradient(90deg,rgba(0,0,0,.5),rgba(0,0,0,.15) 1.5px,rgba(255,255,255,.35) 4px,rgba(255,255,255,.1) 8px,rgba(0,0,0,.18) 12px,transparent 24px)}
+.case .cover::after{inset:0;background:linear-gradient(90deg,rgba(0,0,0,.28),rgba(0,0,0,.08) 1.5px,rgba(255,255,255,.14) 4px,rgba(255,255,255,.04) 8px,rgba(0,0,0,.07) 12px,transparent 20px)}
 .face.front::before,.face.front::after{content:"";position:absolute;right:3px;width:5px;height:28px;border-radius:3px;background:rgba(255,255,255,.22);box-shadow:inset 0 0 0 1px rgba(255,255,255,.2);z-index:3}
 .face.front::before{top:16px}.face.front::after{bottom:16px}
 .case .cover svg{display:block;width:100%;height:100%}
 .case .shell{position:absolute;inset:0;border-radius:3px;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,.22) 0 8%,rgba(255,255,255,.04) 22%,transparent 40%,transparent 62%,rgba(255,255,255,.08) 70%,transparent 78%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),inset 0 0 0 2px rgba(0,0,0,.25)}
-.case .hinge{position:absolute;left:0;top:0;bottom:0;width:40px;border-radius:3px 0 0 3px;background:repeating-linear-gradient(180deg,rgba(0,0,0,.22) 0 1px,transparent 1px 4px),linear-gradient(90deg,#24272b,#2e3236);box-shadow:inset -1px 0 0 rgba(255,255,255,.25)}
+.case .hinge{position:absolute;left:0;top:0;bottom:0;width:40px;border-radius:3px 0 0 3px;background:repeating-linear-gradient(90deg,rgba(0,0,0,.22) 0 1px,transparent 1px 4px),linear-gradient(90deg,#272a2e,#2b2f33);box-shadow:inset -1px 0 0 rgba(255,255,255,.25)}
 /* with tray art the spine is clear too, the tray card running on under it */
-.case.clear .hinge{background:linear-gradient(90deg,rgba(255,255,255,.16),rgba(214,226,238,.04) 40%,rgba(0,0,0,.14));box-shadow:inset 1px 0 0 rgba(255,255,255,.35),inset -1px 0 0 rgba(255,255,255,.3),inset 0 0 0 3px rgba(214,226,238,.06)}
+.case.clear .hinge{background:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 1px,transparent 1px 4px),linear-gradient(90deg,rgba(255,255,255,.08),rgba(214,226,238,.04) 40%,rgba(0,0,0,.14));box-shadow:inset 1px 0 0 rgba(255,255,255,.35),inset -1px 0 0 rgba(255,255,255,.3),inset 0 0 0 3px rgba(214,226,238,.06)}
 .meta{text-align:center;display:flex;flex-direction:column;gap:3px;min-width:0;max-width:394px}
 .meta .ttl{font:italic 700 24px/1.15 var(--f-display);text-wrap:balance}
 .meta .art{font-size:15px;color:var(--ink-2)}
@@ -184,6 +184,16 @@ body{color:var(--ink);font-family:var(--f-body);min-height:100vh;overflow-x:hidd
 .remote input::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;margin-top:-4px;border-radius:3px;border:0;background:repeating-linear-gradient(90deg,rgba(0,0,0,.35) 0 1px,transparent 1px 3px),linear-gradient(180deg,#f4f1ec,#a7acb1 45%,#5b6066);box-shadow:0 1px 2px rgba(0,0,0,.8)}
 .remote input::-moz-range-thumb{width:12px;height:12px;border-radius:3px;border:0;background:repeating-linear-gradient(90deg,rgba(0,0,0,.35) 0 1px,transparent 1px 3px),linear-gradient(180deg,#f4f1ec,#a7acb1 45%,#5b6066);box-shadow:0 1px 2px rgba(0,0,0,.8)}
 .remote input:focus-visible{outline:2px solid #8fb4d9;outline-offset:3px;border-radius:3px}
+
+/* ---------- sticky note: the song, and a personal note about it in pen ---------- */
+.sticky{width:184px;height:176px;padding:24px 16px 14px 18px;box-sizing:border-box;display:flex;flex-direction:column;gap:4px;color:var(--pen);font-family:var(--f-hand);border-radius:1px 1px 3px 14px/1px 1px 3px 6px;
+  background:linear-gradient(180deg,rgba(150,110,0,.12),transparent 22px),linear-gradient(170deg,#f6dc6c,var(--note) 45%,#e7c247);
+  box-shadow:inset 0 -10px 16px -12px rgba(120,80,0,.4),1px 2px 2px rgba(10,5,2,.35),5px 12px 14px -6px var(--drop)}
+/* the bottom-left corner curls up off the desk */
+.sticky::after{content:"";position:absolute;left:0;bottom:0;width:30px;height:16px;border-radius:0 0 0 14px/0 0 0 6px;background:linear-gradient(20deg,rgba(255,255,255,.25),transparent 60%);pointer-events:none}
+.sticky .song{font-size:20px;line-height:1.1;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;overflow-wrap:anywhere}
+.sticky .song:empty{display:none}
+.sticky .scrawl{flex:1;min-height:0;overflow:hidden;font-size:var(--fs,19px);line-height:1.15;overflow-wrap:anywhere;white-space:pre-line}
 </style>
 
 <h1 class="sr">Pocket Disc Player</h1>
@@ -233,6 +243,7 @@ body{color:var(--ink);font-family:var(--f-body);min-height:100vh;overflow-x:hidd
       </div>
     </div>
   </div>
+  <div class="obj sticky" id="sticky" aria-live="polite"><div class="song" id="song"></div><div class="scrawl" id="note"></div></div>
   <svg class="hp" id="hp" aria-hidden="true"></svg>
   <div class="obj remote" id="remote"><div class="rb"><span class="lab lo">&minus;</span><span class="lab hi">+</span><span class="lab v">VOLUME</span><input type="range" id="vol" min="0" max="20" value="12" aria-label="Volume"></div></div>
 </div></div>
@@ -240,32 +251,33 @@ body{color:var(--ink);font-family:var(--f-body);min-height:100vh;overflow-x:hidd
 
 <script>
 // k: file slug in records/; bg/fg: the cover's average color around the rim, and text that reads on it
+// note: your handwritten note on the sticky note under the case (blank leaves just the song title)
 const RECORDS=[
- {t:"Meantime",a:"Helmet",y:1992,k:"meantime",bg:"#833f4a",fg:"#fff",deezerTrackId:2445710},
- {t:"Start a War",a:"Static-X",y:2005,k:"start-a-war",bg:"#18242c",fg:"#fff",deezerTrackId:734042},
- {t:"Purple",a:"Stone Temple Pilots",y:1994,k:"purple",bg:"#a19f8d",fg:"#141414",deezerTrackId:3907803},
- {t:"King for a Day… Fool for a Lifetime",a:"Faith No More",y:1995,k:"king-for-a-day-fool-for-a-lifetime",bg:"#642a2c",fg:"#fff",deezerTrackId:828879},
- {t:"Siamese Dream",a:"The Smashing Pumpkins",y:1993,k:"siamese-dream",bg:"#cbab98",fg:"#141414",deezerTrackId:14738294},
- {t:"Follow the Leader",a:"Korn",y:1998,k:"follow-the-leader",bg:"#7f6c4f",fg:"#fff",deezerTrackId:134523750},
- {t:"American IV: The Man Comes Around",a:"Johnny Cash",y:2002,k:"american-iv-the-man-comes-around",bg:"#3d3b3a",fg:"#fff",deezerTrackId:128846783},
- {t:"Jar of Flies",a:"Alice in Chains",y:1994,k:"jar-of-flies",bg:"#902b23",fg:"#fff",deezerTrackId:1038556},
- {t:"Temple of the Dog",a:"Temple of the Dog",y:1991,k:"temple-of-the-dog",bg:"#393643",fg:"#fff",deezerTrackId:1762614667},
- {t:"Razorblade Suitcase",a:"Bush",y:1996,k:"razorblade-suitcase",bg:"#c09e95",fg:"#141414",deezerTrackId:361116021},
- {t:"Disclaimer II",a:"Seether",y:2004,k:"disclaimer-ii",bg:"#71474e",fg:"#fff",deezerTrackId:80276126},
- {t:"Audioslave",a:"Audioslave",y:2002,k:"audioslave",bg:"#85909a",fg:"#fff",deezerTrackId:851057},
- {t:"Badmotorfinger",a:"Soundgarden",y:1991,k:"badmotorfinger",bg:"#74553f",fg:"#fff",deezerTrackId:136340400},
- {t:"System of a Down",a:"System of a Down",y:1998,k:"system-of-a-down",bg:"#33322c",fg:"#fff",deezerTrackId:70996746},
- {t:"Vheissu",a:"Thrice",y:2005,k:"vheissu",bg:"#59674c",fg:"#fff",deezerTrackId:619791772},
- {t:"Third Eye Blind",a:"Third Eye Blind",y:1997,k:"third-eye-blind",bg:"#9f352a",fg:"#fff",deezerTrackId:685709},
- {t:"Freak Show",a:"Silverchair",y:1996,k:"freak-show",bg:"#754d31",fg:"#fff",deezerTrackId:1037169},
- {t:"Sweet Oblivion",a:"Screaming Trees",y:1992,k:"sweet-oblivion",bg:"#7f7745",fg:"#fff",deezerTrackId:13177932},
- {t:"Tales from the Punchbowl",a:"Primus",y:1995,k:"tales-from-the-punchbowl",bg:"#8a7b4b",fg:"#fff",deezerTrackId:1579661},
- {t:"In Utero",a:"Nirvana",y:1993,k:"in-utero",bg:"#ebe0b0",fg:"#141414",deezerTrackId:70466227},
- {t:"As Good as Dead",a:"Local H",y:1996,k:"as-good-as-dead",bg:"#7b4e32",fg:"#fff",deezerTrackId:2177711},
- {t:"Lost and Found",a:"Mudvayne",y:2005,k:"lost-and-found",bg:"#6e654f",fg:"#fff",deezerTrackId:556809},
- {t:"Chocolate Starfish and the Hot Dog Flavored Water",a:"Limp Bizkit",y:2000,k:"chocolate-starfish-and-the-hot-dog-flavored-water",bg:"#47423f",fg:"#fff",deezerTrackId:104011168},
- {t:"13 Ways to Bleed on Stage",a:"Cold",y:2000,k:"13-ways-to-bleed-on-stage",bg:"#534e51",fg:"#fff",deezerTrackId:1126509},
- {t:"Weathered",a:"Creed",y:2001,k:"weathered",bg:"#61503b",fg:"#fff",deezerTrackId:80274650}
+ {t:"Meantime",a:"Helmet",y:1992,k:"meantime",hole:0.328,bg:"#833f4a",fg:"#fff",deezerTrackId:2445710,note:""},
+ {t:"Start a War",a:"Static-X",y:2005,k:"start-a-war",hole:0.13,bg:"#18242c",fg:"#fff",deezerTrackId:734042,note:""},
+ {t:"Purple",a:"Stone Temple Pilots",y:1994,k:"purple",hole:0.165,bg:"#a19f8d",fg:"#141414",deezerTrackId:3907803,note:""},
+ {t:"King for a Day… Fool for a Lifetime",a:"Faith No More",y:1995,k:"king-for-a-day-fool-for-a-lifetime",hole:0.172,bg:"#642a2c",fg:"#fff",deezerTrackId:828879,note:""},
+ {t:"Siamese Dream",a:"The Smashing Pumpkins",y:1993,k:"siamese-dream",hole:0.328,bg:"#cbab98",fg:"#141414",deezerTrackId:14738294,note:""},
+ {t:"Follow the Leader",a:"Korn",y:1998,k:"follow-the-leader",hole:0.19,bg:"#7f6c4f",fg:"#fff",deezerTrackId:134523750,note:""},
+ {t:"American IV: The Man Comes Around",a:"Johnny Cash",y:2002,k:"american-iv-the-man-comes-around",hole:0.23,bg:"#3d3b3a",fg:"#fff",deezerTrackId:128846783,note:""},
+ {t:"Jar of Flies",a:"Alice in Chains",y:1994,k:"jar-of-flies",hole:0.142,bg:"#902b23",fg:"#fff",deezerTrackId:1038556,note:""},
+ {t:"Temple of the Dog",a:"Temple of the Dog",y:1991,k:"temple-of-the-dog",hole:0.352,bg:"#393643",fg:"#fff",deezerTrackId:1762614667,note:""},
+ {t:"Razorblade Suitcase",a:"Bush",y:1996,k:"razorblade-suitcase",hole:0.225,bg:"#c09e95",fg:"#141414",deezerTrackId:361116021,note:""},
+ {t:"Disclaimer II",a:"Seether",y:2004,k:"disclaimer-ii",hole:0.14,bg:"#71474e",fg:"#fff",deezerTrackId:80276126,note:""},
+ {t:"Audioslave",a:"Audioslave",y:2002,k:"audioslave",hole:0.188,bg:"#85909a",fg:"#fff",deezerTrackId:851057,note:""},
+ {t:"Badmotorfinger",a:"Soundgarden",y:1991,k:"badmotorfinger",hole:0.125,bg:"#74553f",fg:"#fff",deezerTrackId:136340400,note:""},
+ {t:"System of a Down",a:"System of a Down",y:1998,k:"system-of-a-down",hole:0.19,bg:"#33322c",fg:"#fff",deezerTrackId:70996746,note:""},
+ {t:"Vheissu",a:"Thrice",y:2005,k:"vheissu",hole:0.2,bg:"#59674c",fg:"#fff",deezerTrackId:619791772,note:""},
+ {t:"Third Eye Blind",a:"Third Eye Blind",y:1997,k:"third-eye-blind",hole:0.325,bg:"#9f352a",fg:"#fff",deezerTrackId:685709,note:""},
+ {t:"Freak Show",a:"Silverchair",y:1996,k:"freak-show",hole:0.333,bg:"#754d31",fg:"#fff",deezerTrackId:1037169,note:""},
+ {t:"Sweet Oblivion",a:"Screaming Trees",y:1992,k:"sweet-oblivion",hole:0.347,bg:"#7f7745",fg:"#fff",deezerTrackId:13177932,note:""},
+ {t:"Tales from the Punchbowl",a:"Primus",y:1995,k:"tales-from-the-punchbowl",hole:0.31,bg:"#8a7b4b",fg:"#fff",deezerTrackId:1579661,note:""},
+ {t:"In Utero",a:"Nirvana",y:1993,k:"in-utero",hole:0.305,bg:"#ebe0b0",fg:"#141414",deezerTrackId:70466227,note:""},
+ {t:"As Good as Dead",a:"Local H",y:1996,k:"as-good-as-dead",hole:0.3,bg:"#7b4e32",fg:"#fff",deezerTrackId:2177711,note:""},
+ {t:"Lost and Found",a:"Mudvayne",y:2005,k:"lost-and-found",hole:0.217,bg:"#6e654f",fg:"#fff",deezerTrackId:556809,note:""},
+ {t:"Chocolate Starfish and the Hot Dog Flavored Water",a:"Limp Bizkit",y:2000,k:"chocolate-starfish-and-the-hot-dog-flavored-water",hole:0.235,bg:"#47423f",fg:"#fff",deezerTrackId:104011168,note:""},
+ {t:"13 Ways to Bleed on Stage",a:"Cold",y:2000,k:"13-ways-to-bleed-on-stage",hole:0.22,bg:"#534e51",fg:"#fff",deezerTrackId:1126509,note:""},
+ {t:"Weathered",a:"Creed",y:2001,k:"weathered",hole:0.305,bg:"#61503b",fg:"#fff",deezerTrackId:80274650,note:""}
 ];
 const R=RECORDS.slice().sort(()=>Math.random()-.5);
 const $=id=>document.getElementById(id);
@@ -295,25 +307,41 @@ function rimText(r,p){
  const s=(r.t+' · '+r.a+' · '+r.y).toUpperCase(),k=Math.min(1,56/s.length);
  return `<text font-family="Familjen Grotesk,sans-serif" font-size="${13*k}" font-weight="600" letter-spacing="${3*k}" fill="${r.fg}" stroke="${r.bg}" stroke-width="3" stroke-linejoin="round" paint-order="stroke"><textPath href="#${p}arc">${s}</textPath></text>`;
 }
+// r.hole (set per disc in the image CMS) is the inner circle's radius as a fraction of the disc's half-width;
+// the hole and the hub rings around it scale with it from the default 0.2775 (47 of 170)
+// a disc photo already shows its own hub and edge, so it fills to the rim and skips the drawn hub
 function discSVG(r,p='p'){
- return `<svg viewBox="0 0 340 340" aria-hidden="true"><defs><clipPath id="${p}dc"><circle cx="170" cy="170" r="166"/></clipPath><path id="${p}arc" d="M170 170 m-128 0 a128 128 0 1 1 256 0 a128 128 0 1 1 -256 0"/><mask id="${p}m"><rect width="340" height="340" fill="#fff"/><circle cx="170" cy="170" r="47" fill="#000"/></mask></defs><g mask="url(#${p}m)">
+ const f=r.hole?r.hole/.2775:1,hub=f===1?'':` transform="translate(170 170) scale(${f}) translate(-170 -170)"`;
+ return `<svg viewBox="0 0 340 340" aria-hidden="true"><defs><clipPath id="${p}dc"><circle cx="170" cy="170" r="${r.disc?170:166}"/></clipPath><path id="${p}arc" d="M170 170 m-128 0 a128 128 0 1 1 256 0 a128 128 0 1 1 -256 0"/><mask id="${p}m"><rect width="340" height="340" fill="#fff"/><circle cx="170" cy="170" r="47" fill="#000"${hub}/></mask></defs><g mask="url(#${p}m)">
  <circle cx="170" cy="170" r="170" fill="#c9ced3"/>
  <g clip-path="url(#${p}dc)"><rect width="340" height="340" fill="${r.bg}"/>${img(r.disc||r.cover,340)}</g>
  ${r.disc?'':rimText(r,p)}
- <circle cx="170" cy="170" r="62" fill="#d3d8dd"/>
+ ${r.disc?'':`<g${hub}><circle cx="170" cy="170" r="62" fill="#d3d8dd"/>
  <circle cx="170" cy="170" r="62" fill="none" stroke="#9ea5ac" stroke-width="1"/>
- <circle cx="170" cy="170" r="53" fill="none" stroke="#b1b8bf" stroke-width="3"/>
- <circle cx="170" cy="170" r="166" fill="none" stroke="#e8ebee" stroke-width="5" opacity=".8"/></g>
- <path d="M123 170a47 47 0 1 0 94 0a47 47 0 1 0 -94 0zM149 170a21 21 0 1 0 42 0a21 21 0 1 0 -42 0z" fill-rule="evenodd" fill="rgba(225,231,237,.2)"/>
+ <circle cx="170" cy="170" r="53" fill="none" stroke="#b1b8bf" stroke-width="3"/></g>`}
+ <circle cx="170" cy="170" r="166" fill="none" stroke="#e8ebee" stroke-width="5" opacity=".1"/></g>
+ <g${hub}><path d="M123 170a47 47 0 1 0 94 0a47 47 0 1 0 -94 0zM149 170a21 21 0 1 0 42 0a21 21 0 1 0 -42 0z" fill-rule="evenodd" fill="rgba(225,231,237,.2)"/>
  <circle cx="170" cy="170" r="36" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="1.5"/>
  <circle cx="170" cy="170" r="47" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1"/>
- <circle cx="170" cy="170" r="21" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.2"/></svg>`;
+ <circle cx="170" cy="170" r="21" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.2"/></g></svg>`;
 }
 (()=>{let p='<circle class="hr" cx="30" cy="30" r="28.5" fill="none" stroke="#0b0c0e" stroke-width="2"/>';for(let k=0;k<12;k++)p+=`<rect class="ht" x="27.6" y="3" width="4.8" height="15" rx="2.4" fill="#d7dbdf" stroke="rgba(0,0,0,.25)" stroke-width=".5" transform="rotate(${k*30} 30 30)"/>`;p+='<circle class="hc" cx="30" cy="30" r="9" fill="#e4e7ea" stroke="rgba(0,0,0,.3)" stroke-width=".6"/><circle cx="30" cy="30" r="5" fill="none" stroke="rgba(0,0,0,.12)" stroke-width="1"/>';document.getElementById('hub').innerHTML=`<svg viewBox="0 0 60 60" aria-hidden="true">${p}</svg>`})();
 function render(){
  const r=R[i];
  $('cover').innerHTML=coverSVG(r);disc.innerHTML=discSVG(r);$('inside').innerHTML=insideHTML(r);setTray(r);
  $('ttl').textContent=r.t;$('art').textContent=r.a;
+ stickyNote(r);
+}
+// the song title comes from Deezer; the note shrinks until it fits the paper
+function stickyNote(r){
+ const s=$('song'),b=$('note');
+ s.textContent='';b.textContent=r.note||'';
+ info(r.deezerTrackId).then(d=>{if(R[i]==r){s.textContent='♪ '+d.title.replace(/\s*[([].*?[)\]]\s*/g,' ').replace(/\s+-\s+.*$/,'').trim();fit()}},()=>{});
+ fit();
+}
+function fit(){
+ const b=$('note');
+ for(let fs=19;fs>=12;fs--){b.style.setProperty('--fs',fs+'px');if(b.scrollHeight<=b.clientHeight)break}
 }
 // the clock reads the audio; a note ('READ', 'Err', or 'VOL' while the volume shows) holds the time field
 function fmt(){if(note||(st!='playing'&&st!='paused'))return;const s=Math.floor(au.currentTime||0);$('time').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
@@ -474,10 +502,10 @@ $('vol').oninput=e=>{
 
 // earbuds: head position + rotation (stem points along local +y), cord waypoints from plug to splitter, branch waypoints
 const LAYOUTS={
- wide:{w:1000,h:780,player:[78,10,0],cse:[586,40,3],
+ wide:{w:1000,h:880,player:[78,10,0],cse:[586,40,3],note:[606,488,-4],
   hp:{cord:[[52,410],[38,490],[60,575]],rem:[150,630,32],split:[236,684],
-   A:{x:722,y:606,r:35,via:[[330,722],[470,720],[580,700],[636,690]]},B:{x:852,y:652,r:40,via:[[316,738],[460,748],[610,756],[738,752]]}}},
- tall:{w:520,h:1340,player:[62,16,0],cse:[63,830,-2],
+   A:{x:722,y:716,r:35,via:[[330,800],[470,824],[580,810],[636,800]]},B:{x:852,y:762,r:40,via:[[316,816],[460,850],[610,862],[738,862]]}}},
+ tall:{w:520,h:1340,player:[62,16,0],cse:[63,830,-2],note:[44,598,-6],
   hp:{cord:[[36,420]],rem:[30,520,88],split:[46,622],
    A:{x:330,y:640,r:35,via:[[96,690],[190,718]]},B:{x:452,y:702,r:40,via:[[86,712],[190,772],[320,800]]}}}
 };
@@ -582,7 +610,7 @@ function layout(){
  // desktop: objects span ~85% of the viewport width (80% at 2560+), limited by what fits vertically
  const tw=Math.min(avail,Math.max((innerWidth>=2560?.8:.85)*innerWidth,1.1*c.w));
  const s=wide?Math.min(tw/c.w,Math.max((vh-64)/c.h,.62)):Math.min(1.25,avail/c.w);
- place($('pwrap'),...c.player);place($('cwrap'),...c.cse);drawHP(wide?'wide':'tall',c);
+ place($('pwrap'),...c.player);place($('cwrap'),...c.cse);place($('sticky'),...c.note);drawHP(wide?'wide':'tall',c);
  const sc=$('scene');sc.style.width=c.w+'px';sc.style.height=c.h+'px';sc.style.transform=`scale(${s})`;
  const wr=$('wrap');wr.style.width=c.w*s+'px';wr.style.height=c.h*s+'px';
 }

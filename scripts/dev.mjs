@@ -1,11 +1,19 @@
 // Local dev without the Vercel CLI: serves the static files and runs api/track/[id].js the way Vercel does.
 // npm run dev → http://localhost:3000
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { GET } from '../api/track/[id].js';
-import { admin } from './admin.mjs';
+
+// re-import admin.mjs whenever it changes, so edits to the CMS routes apply without restarting
+const ADMIN = new URL('./admin.mjs', import.meta.url);
+let adminAt = 0, admin;
+async function adminRoutes() {
+  const t = (await stat(ADMIN)).mtimeMs;
+  if (t !== adminAt) ({ admin } = await import(`${ADMIN}?v=${(adminAt = t)}`));
+  return admin;
+}
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const PORT = +process.env.PORT || 3000;
@@ -13,7 +21,7 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '
 
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  if (await admin(req, res, url)) return;
+  if (await (await adminRoutes())(req, res, url)) return;
   if (url.pathname.startsWith('/api/track/')) {
     const r = await GET(new Request(url));
     res.writeHead(r.status, Object.fromEntries(r.headers));

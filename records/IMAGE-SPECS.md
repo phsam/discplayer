@@ -48,12 +48,13 @@ Use `disc-template.svg` as a guide layer. The disc fills the whole 800 px square
 
 Some CDs use a clear tray with art behind it instead of black plastic. When this file exists, the page draws the tray as clear plastic over the image. Without it, the tray stays black.
 
-- Same format as the cover: square, 800 × 800 px, full bleed. It fills the area right of the hinge.
-- The clear molding is drawn on top. At 800 px:
-  - a faint ring at radius ~389 px around the center (400, 400), where the disc sits;
-  - the hub at the center: clear teeth out to radius ~68 px and a raised clear ring out to ~145 px. The art shows through both, slightly ghosted.
+- **1.11 : 1, the tray's shape (394 × 354), saved at 1002 × 900**, full bleed, JPEG under 200 KB. The admin page locks the crop to that shape, so what's in the box is exactly what the player shows. It keeps the original upload so you can move and resize the crop later.
+- The page scales the image to fill the tray; an image of another shape (such as the older 800 × 800 ones) gets trimmed evenly from both sides. The clear hinge covers the left 10%.
+- The clear molding is drawn on top. As fractions of the visible area's height:
+  - a faint ring at radius ~49% around a point 55% across and halfway down, where the disc sits;
+  - the hub there: clear teeth out to radius ~8.5% and a raised clear ring out to ~18%. The art shows through both, slightly ghosted.
 - A glossy sheen runs across the top-left, so very light detail there will look a little washed out (same as the cover).
-- The disc normally lives in the player, so the tray is usually seen empty. During a disc swap the disc covers everything inside radius ~373 px for a moment.
+- The disc normally lives in the player, so the tray is usually seen empty. During a disc swap the disc covers everything inside radius ~47% of the hub for a moment.
 
 ## Record list
 
@@ -64,26 +65,26 @@ The disc number is the order you listed them in. The page shuffles them anyway.
 | 01 | Helmet | Meantime | 1992 | `meantime` | ✅ | ✅ | ✅ | ✅ |
 | 02 | Static-X | Start a War | 2005 | `start-a-war` | ✅ | ✅ | ✅ | ✅ |
 | 03 | Stone Temple Pilots | Purple | 1994 | `purple` | ✅ | ✅ | ✅ | |
-| 04 | Faith No More | King for a Day… Fool for a Lifetime | 1995 | `king-for-a-day-fool-for-a-lifetime` | ✅ | | | |
-| 05 | Smashing Pumpkins | Siamese Dream | 1993 | `siamese-dream` | ✅ | | | |
+| 04 | Faith No More | King for a Day… Fool for a Lifetime | 1995 | `king-for-a-day-fool-for-a-lifetime` | ✅ | ✅ | ✅ | ✅ |
+| 05 | Smashing Pumpkins | Siamese Dream | 1993 | `siamese-dream` | ✅ | ✅ | ✅ | |
 | 06 | Korn | Follow the Leader | 1998 | `follow-the-leader` | ✅ | ✅ | ✅ | ✅ |
-| 07 | Johnny Cash | American IV: The Man Comes Around | 2002 | `american-iv-the-man-comes-around` | ✅ | | | |
-| 08 | Alice in Chains | Jar of Flies | 1994 | `jar-of-flies` | ✅ | | | |
-| 09 | Temple of the Dog | Temple of the Dog | 1991 | `temple-of-the-dog` | ✅ | | | |
-| 10 | Bush | Razorblade Suitcase | 1996 | `razorblade-suitcase` | ✅ | | | |
-| 11 | Seether | Disclaimer II | 2004 | `disclaimer-ii` | ✅ | | | |
+| 07 | Johnny Cash | American IV: The Man Comes Around | 2002 | `american-iv-the-man-comes-around` | ✅ | ✅ | ✅ | ✅ |
+| 08 | Alice in Chains | Jar of Flies | 1994 | `jar-of-flies` | ✅ | ✅ | ✅ | ✅ |
+| 09 | Temple of the Dog | Temple of the Dog | 1991 | `temple-of-the-dog` | ✅ | ✅ | ✅ | |
+| 10 | Bush | Razorblade Suitcase | 1996 | `razorblade-suitcase` | ✅ | ✅ | ✅ | |
+| 11 | Seether | Disclaimer II | 2004 | `disclaimer-ii` | ✅ | ✅ | ✅ | ✅ |
 | 12 | Audioslave | Audioslave | 2002 | `audioslave` | ✅ | ✅ | ✅ | ✅ |
 | 13 | Soundgarden | Badmotorfinger | 1991 | `badmotorfinger` | ✅ | ✅ | ✅ | |
-| 14 | System of a Down | System of a Down | 1998 | `system-of-a-down` | ✅ | | | |
+| 14 | System of a Down | System of a Down | 1998 | `system-of-a-down` | ✅ | ✅ | ✅ | ✅ |
 | 15 | Thrice | Vheissu | 2005 | `vheissu` | ✅ | ✅ | ✅ | ✅ |
 | 16 | Third Eye Blind | Third Eye Blind | 1997 | `third-eye-blind` | ✅ | ✅ | ✅ | |
 | 17 | Silverchair | Freak Show | 1996 | `freak-show` | ✅ | ✅ | ✅ | ✅ |
-| 18 | Screaming Trees | Sweet Oblivion | 1992 | `sweet-oblivion` | ✅ | | | |
-| 19 | Primus | Tales from the Punchbowl | 1995 | `tales-from-the-punchbowl` | ✅ | | | |
-| 20 | Nirvana | In Utero | 1993 | `in-utero` | ✅ | | | |
-| 21 | Local H | As Good as Dead | 1996 | `as-good-as-dead` | ✅ | | | |
-| 22 | Mudvayne | Lost and Found | 2005 | `lost-and-found` | ✅ | | | |
-| 23 | Limp Bizkit | Chocolate Starfish and the Hot Dog Flavored Water | 2000 | `chocolate-starfish-and-the-hot-dog-flavored-water` | ✅ | | | |
+| 18 | Screaming Trees | Sweet Oblivion | 1992 | `sweet-oblivion` | ✅ | ✅ | ✅ | |
+| 19 | Primus | Tales from the Punchbowl | 1995 | `tales-from-the-punchbowl` | ✅ | ✅ | ✅ | |
+| 20 | Nirvana | In Utero | 1993 | `in-utero` | ✅ | ✅ | ✅ | |
+| 21 | Local H | As Good as Dead | 1996 | `as-good-as-dead` | ✅ | ✅ | ✅ | |
+| 22 | Mudvayne | Lost and Found | 2005 | `lost-and-found` | ✅ | ✅ | ✅ | ✅ |
+| 23 | Limp Bizkit | Chocolate Starfish and the Hot Dog Flavored Water | 2000 | `chocolate-starfish-and-the-hot-dog-flavored-water` | ✅ | ✅ | ✅ | ✅ |
 | 24 | Cold | 13 Ways to Bleed on Stage | 2000 | `13-ways-to-bleed-on-stage` | ✅ | ✅ | ✅ | ✅ |
 | 25 | Creed | Weathered | 2001 | `weathered` | ✅ | ✅ | ✅ | ✅ |
 

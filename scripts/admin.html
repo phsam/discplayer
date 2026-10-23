@@ -22,9 +22,14 @@ main{padding:20px;display:grid;gap:16px;grid-template-columns:repeat(auto-fill,m
 .slots{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .slot{display:flex;flex-direction:column;gap:5px;min-width:0}
 .box{position:relative;aspect-ratio:1;border-radius:6px;background:var(--slot);overflow:hidden;cursor:pointer;outline:2px dashed transparent;outline-offset:-2px;transition:outline-color .15s}
+.box.has{cursor:zoom-in}
 .box:hover,.box.over{outline-color:var(--accent)}
+.box.over::after{content:'';position:absolute;left:0;bottom:0;z-index:3;width:100%;height:4px;background:var(--accent);transform-origin:left;animation:hold 1.5s linear forwards}
+.box.over *{pointer-events:none}
+.box.armed{outline-style:solid}
+@keyframes hold{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .box img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.box.disc img.art{-webkit-mask:radial-gradient(closest-side,transparent 27.75%,#000 27.9%,#000 97.5%,transparent 97.7%);mask:radial-gradient(closest-side,transparent 27.75%,#000 27.9%,#000 97.5%,transparent 97.7%)}
+.box.disc img.art{-webkit-mask:radial-gradient(closest-side,transparent var(--hole),#000 calc(var(--hole) + .15%),#000 99.8%,transparent 100%);mask:radial-gradient(closest-side,transparent var(--hole),#000 calc(var(--hole) + .15%),#000 99.8%,transparent 100%)}
 .box img.guide{display:none;opacity:.9}
 body.guides .box.disc.has img.guide{display:block}
 .box .empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--mute);font-size:12px;padding:6px}
@@ -32,11 +37,38 @@ body.guides .box.disc.has img.guide{display:block}
 .meta{display:flex;justify-content:space-between;align-items:baseline;gap:4px;font-size:12px}
 .meta b{font-weight:600}
 .meta .req{color:var(--bad);font-weight:500}
-.meta button{font:inherit;font-size:12px;border:0;background:none;color:var(--bad);cursor:pointer;padding:0}
+.meta span{display:flex;gap:8px}
+.meta button{font:inherit;font-size:12px;border:0;background:none;color:var(--accent);cursor:pointer;padding:0}
+.meta button[data-del]{color:var(--bad)}
 .note{font-size:11px;color:var(--mute);min-height:1em;overflow-wrap:anywhere}
 .note.err{color:var(--bad)}
 .note.ok{color:var(--ok)}
 .hidden{display:none}
+#view{padding:0;border:0;background:none;max-width:none;max-height:none;width:100vw;height:100dvh;cursor:zoom-out}
+#view[open]{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px}
+#view::backdrop{background:rgba(0,0,0,.9)}
+#view .frame{position:relative;width:min(100%,100dvh - 90px);aspect-ratio:1}
+#view img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border-radius:4px}
+/* dims what the disc mask cuts away and rings the edges; the gradient itself is set by drawCrop() */
+#view .crop{position:absolute;inset:0;display:none;cursor:move;touch-action:none}
+#view.crop-on .crop{display:block}
+/* trays show the uncropped source at its own shape, with the box that gets saved; drag it to move, its corners to resize */
+#view.sq-on .frame{aspect-ratio:var(--ar);width:min(100%,(100dvh - 90px)*var(--ar));overflow:hidden;border-radius:4px}
+#view.sq-on img{border-radius:0}
+#view .sq{position:absolute;display:none;cursor:move;touch-action:none;user-select:none;-webkit-user-select:none;outline:1px solid #fff;box-shadow:0 0 0 100vmax rgba(0,0,0,.72)}
+#view.sq-on .sq{display:block}
+/* resize handles sit just inside the box, so the frame's edge never clips them */
+#view .sq i{position:absolute;width:14px;height:14px;transform:translate(var(--tx),var(--ty));background:#fff;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+#view .sq i[data-e*=n]{top:0;--ty:0}#view .sq i[data-e*=s]{top:100%;--ty:-100%}#view .sq i[data-e*=w]{left:0;--tx:0}#view .sq i[data-e*=e]{left:100%;--tx:-100%}
+#view .sq i[data-e=nw],#view .sq i[data-e=se]{cursor:nwse-resize}
+#view .sq i[data-e=ne],#view .sq i[data-e=sw]{cursor:nesw-resize}
+#view .bar{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 14px;align-items:center;color:#ddd;font-size:13px;cursor:default}
+#view .tools{display:flex;gap:10px;align-items:center}
+#view .tools label{display:flex;gap:6px;align-items:center}
+#view .tools input{width:100px}
+#view .tools[hidden]{display:none}
+#view .bar p{margin:0}
+#view .bar button{font:inherit;padding:4px 10px;border:1px solid #666;border-radius:6px;background:#222;color:#eee;cursor:pointer}
 </style>
 </head>
 <body>
@@ -49,11 +81,18 @@ body.guides .box.disc.has img.guide{display:block}
 </header>
 <main id="list"></main>
 <input type="file" id="file" accept="image/*" hidden>
+<dialog id="view" aria-label="Image preview"><div class="frame"><img alt=""><div class="crop"></div><div class="sq"><i data-e="nw"></i><i data-e="ne"></i><i data-e="se"></i><i data-e="sw"></i></div></div><div class="bar"><p></p><span class="tools" id="sqTools"><button type="button" id="sqReset">Reset</button><button type="button" id="sqSave">Save crop</button></span><span class="tools" id="cropTools"><label>Size <input type="range" id="cropSize" min="30" max="150" step="1"></label><label>Hole <input type="range" id="cropHole" min="10" max="60" step=".25"></label><button type="button" id="cropReset">Reset</button><button type="button" id="cropSave">Save crop</button></span><button type="button" id="crop"></button></div></dialog>
 
 <script>
 // Uploads go to records/<slug>-<kind>.jpg via the dev server (scripts/admin.mjs).
 // Images are squared, resized and compressed here to match records/IMAGE-SPECS.md: 800×800 JPEG under 200 KB.
+// Trays are cropped to the shape of the area the art fills in the player (394×354), 900 px tall.
 const SIZE=800,LIMIT=200*1024;
+// the default tray crop: the largest centered box of that shape, as edge fractions of a w×h image
+const TRAY_AR=394/354;
+const trayBox=(w,h)=>{const x=Math.min(1,h*TRAY_AR/w)/2,y=Math.min(1,w/TRAY_AR/h)/2;return {l:.5-x,t:.5-y,r:.5+x,b:.5+y}};
+const traySize=(w,h)=>{const z=Math.min(900/Math.min(w,h),2400/Math.max(w,h));return [Math.round(w*z),Math.round(h*z)]};
+const HOLE=.2775; // default inner-circle radius as a fraction of the disc's; a record's own is r.hole, kept in index.html
 const KINDS=[
  {k:'cover',label:'Cover',hint:'Front of the booklet'},
  {k:'disc',label:'Disc',hint:'Printed disc face'},
@@ -76,11 +115,11 @@ async function api(path,opt){
 function slotHTML(r,{k,label,hint}){
  const v=r.images[k];
  return `<div class="slot" data-k="${r.k}" data-kind="${k}">
-  <div class="box ${k} ${v?'has':''}" tabindex="0" role="button" aria-label="${v?'Replace':'Upload'} ${label.toLowerCase()} for ${esc(r.t)}">
+  <div class="box ${k} ${v?'has':''}"${k==='disc'?` style="--hole:${(r.hole||HOLE)*100}%"`:''} tabindex="0" role="button" aria-label="${v?'View':'Upload'} ${label.toLowerCase()} for ${esc(r.t)}">
    ${v?`<img class="art" src="/records/${r.k}-${k}.jpg?v=${v}" alt="">`:`<div class="empty">Drop or click<br>${hint}</div>`}
    ${k==='disc'?'<img class="guide" src="/records/disc-template.svg" alt="">':''}
   </div>
-  <div class="meta"><b>${label}</b>${v?(k==='cover'?'':'<button data-del>Remove</button>'):(k==='cover'?'<span class="req">required</span>':'')}</div>
+  <div class="meta"><b>${label}</b>${v?`<span><button data-pick>Replace</button>${k==='cover'?'':'<button data-del>Remove</button>'}</span>`:(k==='cover'?'<span class="req">required</span>':'')}</div>
   <div class="note"></div>
  </div>`;
 }
@@ -95,25 +134,40 @@ function render(){
  }).join('');
 }
 
-// center-crop to a square, scale to 800, then lower JPEG quality until it fits under 200 KB
-async function prepare(file){
- const bmp=await createImageBitmap(file);
- const s=Math.min(bmp.width,bmp.height),notes=[];
- if(Math.abs(bmp.width-bmp.height)>2)notes.push(`cropped ${bmp.width}×${bmp.height} to square`);
- if(s<SIZE)notes.push(`upscaled from ${s}px`);
- const c=document.createElement('canvas');c.width=c.height=SIZE;
+// center-crop to a square, scale to 800, then lower JPEG quality until it fits under 200 KB. Trays are cropped
+// to trayBox instead (scaled by traySize), and also return that crop and the whole image with its short side at
+// most 1800, so the box can be changed later and still be sharp.
+async function prepare(file,kind){
+ const bmp=await createImageBitmap(file),tray=kind==='tray',notes=[];
+ const s=Math.min(bmp.width,bmp.height),box=tray?trayBox(bmp.width,bmp.height):null;
+ const [bw,bh]=tray?[(box.r-box.l)*bmp.width,(box.b-box.t)*bmp.height]:[s,s],[W,H]=tray?traySize(bw,bh):[SIZE,SIZE];
+ if(bw<bmp.width-2||bh<bmp.height-2)notes.push(`cropped ${bmp.width}×${bmp.height} to ${tray?'the tray shape':'square'}`);
+ if(W>bw+1)notes.push(`upscaled from ${Math.round(bw)}×${Math.round(bh)}`);
+ const c=document.createElement('canvas');c.width=W;c.height=H;
  const g=c.getContext('2d');
- g.fillStyle='#000';g.fillRect(0,0,SIZE,SIZE);
+ g.fillStyle='#000';g.fillRect(0,0,W,H);
  g.imageSmoothingQuality='high';
- g.drawImage(bmp,(bmp.width-s)/2,(bmp.height-s)/2,s,s,0,0,SIZE,SIZE);
+ g.drawImage(bmp,(bmp.width-bw)/2,(bmp.height-bh)/2,bw,bh,0,0,W,H);
+ let src=null;
+ if(tray){
+  const z=Math.min(1,1800/s),o=document.createElement('canvas');
+  o.width=Math.round(bmp.width*z);o.height=Math.round(bmp.height*z);
+  const og=o.getContext('2d');og.imageSmoothingQuality='high';og.drawImage(bmp,0,0,o.width,o.height);
+  src=await new Promise(ok=>o.toBlob(ok,'image/jpeg',.9));
+ }
  bmp.close&&bmp.close();
+ const blob=await encode(c);
+ if(blob.size>LIMIT)notes.push('still over 200 KB');
+ return {blob,src,box,notes};
+}
+
+async function encode(c){
  let blob;
  for(let q=.86;q>=.4;q-=.06){
   blob=await new Promise(ok=>c.toBlob(ok,'image/jpeg',q));
   if(blob.size<=LIMIT)break;
  }
- if(blob.size>LIMIT)notes.push('still over 200 KB');
- return {blob,notes};
+ return blob;
 }
 
 function note(slot,text,cls=''){const n=slot.querySelector('.note');n.textContent=text;n.className='note '+cls}
@@ -123,9 +177,10 @@ async function upload(slot,file){
  const {k,kind}=slot.dataset,box=slot.querySelector('.box');
  box.insertAdjacentHTML('beforeend','<div class="busy">Saving…</div>');
  try{
-  const {blob,notes}=await prepare(file);
-  const res=await api(`image/${k}/${kind}`,{method:'PUT',headers:{'content-type':'image/jpeg'},body:blob});
-  const r=RECS.find(r=>r.k===k);r.images=res.images;render();
+  const keep=kind==='tray',{blob,src,box,notes}=await prepare(file,kind);
+  if(keep)await api(`source/${k}/${kind}`,{method:'PUT',headers:{'content-type':'image/jpeg'},body:src});
+  const res=await api(`image/${k}/${kind}${keep?'?crop='+[box.l,box.t,box.r,box.b].map(v=>v.toFixed(4)).join(','):''}`,{method:'PUT',headers:{'content-type':'image/jpeg'},body:blob});
+  const r=RECS.find(r=>r.k===k);r.images=res.images;r.sources=res.sources;render();
   note(document.querySelector(`.slot[data-k="${k}"][data-kind="${kind}"]`),`Saved ${kb(blob.size)}${notes.length?' · '+notes.join(', '):''}`,'ok');
  }catch(e){box.querySelector('.busy')?.remove();note(slot,e.message,'err')}
 }
@@ -133,26 +188,191 @@ async function upload(slot,file){
 async function remove(slot){
  const {k,kind}=slot.dataset,r=RECS.find(r=>r.k===k);
  if(!confirm(`Remove the ${kind} image for “${r.t}”?`))return;
- try{r.images=(await api(`image/${k}/${kind}`,{method:'DELETE'})).images;render()}
+ try{({images:r.images,sources:r.sources}=await api(`image/${k}/${kind}`,{method:'DELETE'}));render()}
  catch(e){note(slot,e.message,'err')}
 }
+
+function choose(slot){pick=slot;$('file').value='';$('file').click()}
+
+// full-screen preview of the saved file (unmasked, so the whole square shows)
+// discs get a toggle that shows what the disc mask crops; the choice sticks between opens.
+// With the crop showing, drag it to move and scroll/pinch or use the slider to resize; shift+scroll or
+// the Hole slider resizes only the inner circle. "Save crop" re-renders the image so that circle becomes
+// the disc, and saves the inner circle to the record. crop is the disc's center (fraction of the square),
+// its radius as a fraction of the full-size disc, and the inner circle's radius as a fraction of its own.
+let showCrop=false,isDisc=false,cur=null,crop={x:.5,y:.5,s:1,h:HOLE};
+const rec=()=>RECS.find(r=>r.k===cur.dataset.k);
+const saved=()=>({x:.5,y:.5,s:1,h:rec().hole||HOLE});
+const frame=$('view').querySelector('.frame'),ring=$('view').querySelector('.crop');
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+function drawCrop(){
+ $('cropSize').value=Math.round(crop.s*100);$('cropHole').value=crop.h*100;
+ // same stops as .box.disc img.art: inner circle at crop.h, edge at the full radius, as the player clips a disc image
+ const h=crop.h*100;
+ ring.style.background=`radial-gradient(circle ${crop.s*frame.clientWidth/2}px at ${crop.x*100}% ${crop.y*100}%,rgba(0,0,0,.72) ${h-.15}%,#fff ${h}%,transparent ${h+.2}%,transparent 99.4%,#fff 99.6%,rgba(0,0,0,.72) 99.8%)`;
+}
+function cropUI(){
+ const on=isDisc&&showCrop;
+ $('view').classList.toggle('crop-on',on);
+ $('crop').hidden=!isDisc;$('crop').textContent=showCrop?'Hide crop':'Show crop';
+ $('cropTools').hidden=!on;
+ if(on)drawCrop();
+}
+function view(slot){
+ const r=RECS.find(r=>r.k===slot.dataset.k),kind=KINDS.find(x=>x.k===slot.dataset.kind);
+ const d=$('view');
+ cur=slot;isDisc=kind.k==='disc';crop=saved();
+ src=r.sources?.[kind.k]||null;
+ d.classList.remove('sq-on');$('sqTools').hidden=!src;
+ if(src){
+  img.onload=()=>{img.onload=null;q=start();d.style.setProperty('--ar',img.naturalWidth/img.naturalHeight);d.classList.add('sq-on');drawSq()};
+  img.src=`/admin/api/source/${r.k}/${kind.k}?v=${src.v}`;
+  if(img.complete&&img.naturalWidth)img.onload(); // same URL as last time fires no load
+ }else img.src=slot.querySelector('img.art').src;
+ d.querySelector('p').textContent=`${r.t} · ${kind.label}${kind.k==='tray'&&!src?' · replace it to choose the crop':''}`;
+ d.showModal();
+ cropUI();
+}
+// a click closes the preview, except on the controls or while editing the crop
+$('view').addEventListener('click',e=>{
+ if(e.target.closest('.bar')||((isDisc&&showCrop||src)&&e.target.closest('.frame')))return;
+ $('view').close();
+});
+$('crop').addEventListener('click',()=>{showCrop=!showCrop;cropUI()});
+addEventListener('resize',()=>{if($('view').open&&isDisc&&showCrop)drawCrop()});
+
+ring.addEventListener('pointerdown',e=>{
+ ring.setPointerCapture(e.pointerId);
+ const w=frame.clientWidth,x0=e.clientX,y0=e.clientY,{x,y}=crop;
+ ring.onpointermove=m=>{crop.x=clamp(x+(m.clientX-x0)/w,0,1);crop.y=clamp(y+(m.clientY-y0)/w,0,1);drawCrop()};
+ ring.onpointerup=ring.onpointercancel=()=>ring.onpointermove=null;
+});
+ring.addEventListener('wheel',e=>{
+ e.preventDefault();
+ const z=Math.exp(-(e.deltaY||e.deltaX)*.002); // shift+wheel scrolls sideways on some systems
+ if(e.shiftKey)crop.h=clamp(crop.h*z,.1,.6);else crop.s=clamp(crop.s*z,.3,1.5);
+ drawCrop();
+},{passive:false});
+$('cropSize').addEventListener('input',e=>{crop.s=e.target.value/100;drawCrop()});
+$('cropHole').addEventListener('input',e=>{crop.h=e.target.value/100;drawCrop()});
+$('cropReset').addEventListener('click',()=>{crop=saved();drawCrop()});
+
+$('cropSave').addEventListener('click',async e=>{
+ const btn=e.target,img=$('view').querySelector('img'),{k,kind}=cur.dataset,r=rec(),done=[];
+ btn.disabled=true;btn.textContent='Saving…';
+ try{
+  if(crop.x!==.5||crop.y!==.5||crop.s!==1){
+   // scale and shift so the chosen circle fills the 800 px square; anything off the source is black
+   const c=document.createElement('canvas');c.width=c.height=SIZE;
+   const g=c.getContext('2d'),z=1/crop.s,w=SIZE*z;
+   g.fillStyle='#000';g.fillRect(0,0,SIZE,SIZE);
+   g.imageSmoothingQuality='high';
+   g.drawImage(img,SIZE/2-crop.x*w,SIZE/2-crop.y*w,w,w);
+   const blob=await encode(c);
+   r.images=(await api(`image/${k}/${kind}`,{method:'PUT',headers:{'content-type':'image/jpeg'},body:blob})).images;
+   done.push(`cropped · saved ${kb(blob.size)}`);
+  }
+  const h=Math.abs(crop.h-HOLE)<.001?null:+crop.h.toFixed(3);
+  if(h!==r.hole){
+   r.hole=(await api(`hole/${k}`,{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({hole:h})})).hole;
+   done.push(h?`inner circle ${(h*100).toFixed(1)}%`:'inner circle reset');
+  }
+  render();
+  cur=document.querySelector(`.slot[data-k="${k}"][data-kind="${kind}"]`);
+  note(cur,done.length?done.join(' · ').replace(/^./,c=>c.toUpperCase()):'Nothing to save','ok');
+  img.src=cur.querySelector('img.art').src;crop=saved();drawCrop();
+ }catch(err){note(cur,err.message,'err');alert('Could not save the crop: '+err.message)}
+ finally{btn.disabled=false;btn.textContent='Save crop'}
+});
+
+// trays keep their uncropped upload, so the preview shows all of it with the box that gets saved, locked to
+// the tray's shape so it matches what the player shows. Drag inside the box to move it, or a corner to resize it
+// around the opposite corner. q is the box's edges as fractions of the source's width (l, r) and height (t, b).
+let src=null,q={l:0,t:0,r:1,b:1};
+// a saved crop of another shape (from before the lock) starts over at the default
+const start=()=>{
+ const c=src.crop,w=img.naturalWidth,h=img.naturalHeight;
+ return c&&Math.abs((c.r-c.l)*w/((c.b-c.t)*h)/TRAY_AR-1)<.01?{...c}:trayBox(w,h);
+};
+const sq=$('view').querySelector('.sq'),img=$('view').querySelector('img');
+const MIN=.05;
+function drawSq(){
+ sq.style.left=q.l*100+'%';sq.style.top=q.t*100+'%';
+ sq.style.width=(q.r-q.l)*100+'%';sq.style.height=(q.b-q.t)*100+'%';
+}
+sq.addEventListener('pointerdown',e=>{
+ e.preventDefault(); // else the browser may start a native drag or selection and cancel the pointer
+ sq.setPointerCapture(e.pointerId);
+ const fw=frame.clientWidth,fh=frame.clientHeight,x0=e.clientX,y0=e.clientY,o={...q},edge=e.target.dataset.e||'';
+ sq.onpointermove=m=>{
+  const dx=(m.clientX-x0)/fw,dy=(m.clientY-y0)/fh;
+  if(!edge){
+   const mx=clamp(dx,-o.l,1-o.r),my=clamp(dy,-o.t,1-o.b);
+   q={l:o.l+mx,r:o.r+mx,t:o.t+my,b:o.b+my};
+  }else{
+   // in source pixels: grow from the anchored corner by whichever axis moved further, within the image
+   const W=img.naturalWidth,H=img.naturalHeight,sx=edge.includes('e')?1:-1,sy=edge.includes('s')?1:-1;
+   const ax=(sx>0?o.l:o.r)*W,ay=(sy>0?o.t:o.b)*H,px=(sx>0?o.r:o.l)*W+dx*W,py=(sy>0?o.b:o.t)*H+dy*H;
+   const max=Math.min(sx>0?W-ax:ax,(sy>0?H-ay:ay)*TRAY_AR);
+   const bw=clamp(Math.max(sx*(px-ax),sy*(py-ay)*TRAY_AR),Math.min(max,MIN*Math.min(W,H*TRAY_AR)),max),bh=bw/TRAY_AR;
+   q={l:(sx>0?ax:ax-bw)/W,r:(sx>0?ax+bw:ax)/W,t:(sy>0?ay:ay-bh)/H,b:(sy>0?ay+bh:ay)/H};
+  }
+  drawSq();
+ };
+ sq.onpointerup=sq.onpointercancel=()=>sq.onpointermove=null;
+});
+$('sqReset').addEventListener('click',()=>{q=start();drawSq()});
+$('sqSave').addEventListener('click',async e=>{
+ const btn=e.target,{k,kind}=cur.dataset,r=rec();
+ btn.disabled=true;btn.textContent='Saving…';
+ try{
+  const w=img.naturalWidth,h=img.naturalHeight,bw=(q.r-q.l)*w,bh=(q.b-q.t)*h,[W,H]=traySize(bw,bh);
+  const c=document.createElement('canvas');c.width=W;c.height=H;
+  const g=c.getContext('2d');g.imageSmoothingQuality='high';
+  g.drawImage(img,q.l*w,q.t*h,bw,bh,0,0,W,H);
+  const blob=await encode(c);
+  const crop=[q.l,q.t,q.r,q.b].map(v=>v.toFixed(4)).join(',');
+  ({images:r.images,sources:r.sources}=await api(`image/${k}/${kind}?crop=${crop}`,{method:'PUT',headers:{'content-type':'image/jpeg'},body:blob}));
+  src=r.sources[kind];q=start();render();
+  cur=document.querySelector(`.slot[data-k="${k}"][data-kind="${kind}"]`);
+  note(cur,`Cropped to ${W}×${H}${W>bw+1?` (upscaled from ${Math.round(bw)}×${Math.round(bh)})`:''} · saved ${kb(blob.size)}`,'ok');
+ }catch(err){note(cur,err.message,'err');alert('Could not save the crop: '+err.message)}
+ finally{btn.disabled=false;btn.textContent='Save crop'}
+});
 
 const list=$('list');
 list.addEventListener('click',e=>{
  const slot=e.target.closest('.slot');if(!slot)return;
  if(e.target.closest('[data-del]'))return remove(slot);
- if(e.target.closest('.box')){pick=slot;$('file').value='';$('file').click()}
+ if(e.target.closest('[data-pick]'))return choose(slot);
+ const box=e.target.closest('.box');
+ if(box)box.classList.contains('has')?view(slot):choose(slot);
 });
 list.addEventListener('keydown',e=>{
  if((e.key==='Enter'||e.key===' ')&&e.target.classList.contains('box')){e.preventDefault();e.target.click()}
 });
 $('file').addEventListener('change',e=>{if(pick&&e.target.files[0])upload(pick,e.target.files[0])});
-list.addEventListener('dragover',e=>{const b=e.target.closest('.box');if(!b)return;e.preventDefault();b.classList.add('over')});
-list.addEventListener('dragleave',e=>e.target.closest('.box')?.classList.remove('over'));
+// a drop only lands after hovering the same box for HOLD ms, so a file dragged across the list
+// doesn't replace an image by accident; the bar along the bottom fills while it arms
+// dragleave fires spuriously (often with no relatedTarget), so instead dragover, which repeats while the
+// pointer is still, keeps the hold alive: it resets only when dragover lands elsewhere or stops arriving
+const HOLD=1500;let hold=null;
+const unhold=()=>{if(!hold)return;clearTimeout(hold.t);clearTimeout(hold.lost);hold.b.classList.remove('over','armed');hold=null};
+addEventListener('dragover',e=>{
+ const b=e.target.closest?.('.box');
+ if(hold?.b!==b){
+  unhold();if(!b)return;b.classList.add('over');
+  hold={b,t:setTimeout(()=>b.classList.add('armed'),HOLD)};
+ }
+ clearTimeout(hold.lost);hold.lost=setTimeout(unhold,1000);
+},true);
 list.addEventListener('drop',e=>{
- const b=e.target.closest('.box');if(!b)return;e.preventDefault();b.classList.remove('over');
- upload(b.closest('.slot'),e.dataTransfer.files[0]);
+ const b=e.target.closest('.box');if(!b)return;e.preventDefault();
+ const ok=b.classList.contains('armed');unhold();
+ if(ok)upload(b.closest('.slot'),e.dataTransfer.files[0]);
+ else note(b.closest('.slot'),'Hold over the box until the bar fills to drop');
 });
+addEventListener('dragend',unhold);
 // stop a missed drop from navigating away to the image
 addEventListener('dragover',e=>e.preventDefault());addEventListener('drop',e=>e.preventDefault());
 
